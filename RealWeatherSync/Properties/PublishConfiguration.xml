@@ -97,11 +97,14 @@ MIT. Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licens
 	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-real-weather-sync.1937641/" />
 
 	<!--
-		Optional. Allowed Type values (exact spelling, from ModPublisher.ExternalType):
+		Public source code. Mod managers such as Skyve flag mods whose source is not
+		available, so this link needs to stay declared here.
+
+		Allowed Type values (exact spelling, from ModPublisher.ExternalType):
 		discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi,
 		crowdin, gitlab, gofundme. There is no generic "website" type.
-		<ExternalLink Type="github" Url="https://github.com/..." />
 	-->
+	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 
 	<ModVersion Value="1.0.0" />
 
