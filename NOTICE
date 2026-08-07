@@ -1,0 +1,65 @@
+Real Weather Sync
+=================
+
+Copyright (c) 2026 Fabiozsche.
+Licensed under the MIT License. See the LICENSE file.
+
+Published on Paradox Mods as "Real Weather Sync", mod id 154183.
+
+
+Third-party data
+----------------
+
+Weather forecasts and geocoding are provided by Open-Meteo.
+
+    Open-Meteo - https://open-meteo.com/
+    Weather data by Open-Meteo.com, licensed under
+    Creative Commons Attribution 4.0 International (CC BY 4.0)
+    https://creativecommons.org/licenses/by/4.0/
+
+Open-Meteo requires no account and no API key. Real Weather Sync sends only the
+city name entered by the player (to the geocoding endpoint) and the coordinates
+returned by that lookup (to the forecast endpoint).
+
+
+Third-party libraries
+---------------------
+
+Newtonsoft.Json (Json.NET) - Copyright (c) 2007 James Newton-King, MIT License.
+    https://github.com/JamesNK/Newtonsoft.Json
+
+Newtonsoft.Json is NOT redistributed with Real Weather Sync. The copy that ships
+with Cities: Skylines II (Cities2_Data/Managed/Newtonsoft.Json.dll) is referenced
+at build time with <Private>false</Private> and resolved from the game at runtime.
+
+Cities: Skylines II game and Colossal Order engine assemblies are referenced at
+build time only and are not redistributed.
+
+
+Acknowledgement: Time & Weather Anarchy
+---------------------------------------
+
+Time & Weather Anarchy by rodrigmatrix
+    https://github.com/rodrigmatrix/TimeWeatherAnarchy
+    Licensed under the Apache License, Version 2.0
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Time & Weather Anarchy was consulted as a read-only technical reference during
+the development of Real Weather Sync, to understand the current Cities: Skylines II
+modding toolchain layout and to confirm which Game.Simulation.ClimateSystem
+properties can be overridden safely.
+
+NO SOURCE CODE FROM TIME & WEATHER ANARCHY WAS COPIED OR ADAPTED INTO THIS
+PROJECT. No files here are derived from it. Real Weather Sync has no build-time
+or runtime dependency on it, shares no namespace, assembly name, mod id, settings
+key, settings file or output directory with it, and reuses none of its UI
+components, profiles, icons or branding.
+
+All Cities: Skylines II APIs used by Real Weather Sync were verified directly
+against the installed game assemblies (Cities2_Data/Managed/Game.dll and the
+Colossal.* assemblies).
+
+Because no Apache-2.0 licensed material is included or distributed, the
+redistribution obligations of Apache License 2.0 section 4 are not triggered by
+this project. This acknowledgement is provided as a courtesy to the author of
+Time & Weather Anarchy.

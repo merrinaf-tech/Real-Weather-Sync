@@ -1,0 +1,247 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>9.0</LangVersion>
+		<Configurations>Debug;Release</Configurations>
+
+		<AssemblyName>RealWeatherSync</AssemblyName>
+		<RootNamespace>RealWeatherSync</RootNamespace>
+		<Product>Real Weather Sync</Product>
+		<Company>RealWeatherSync</Company>
+		<Version>1.0.0</Version>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+		<SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+		<!--
+			Consumed by Mod.targets: the file handed to ModPublisher.exe. It is passed
+			by path and must NOT be part of the uploaded content folder.
+		-->
+		<PublishConfigurationPath>Properties\PublishConfiguration.xml</PublishConfigurationPath>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+		<Optimize>true</Optimize>
+
+		<!--
+			A PDB must exist even in Release: Unity's EntitiesILPostProcessors reads
+			ICompiledAssembly.InMemoryAssembly.PdbData and throws
+			ArgumentNullException("source") when it is absent, which fails the whole
+			ModPostProcessor step. The PDB is produced for the post processor and then
+			removed from $(OutDir) by RemoveSymbolsBeforeDeploy below, so it is never
+			deployed or uploaded.
+		-->
+		<DebugType>portable</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+
+		<!--
+			Keep the developer's absolute source paths out of the compiled assembly and
+			its debug directory - the uploaded DLL must not carry local user paths.
+		-->
+		<Deterministic>true</Deterministic>
+		<PathMap>$(MSBuildProjectDirectory)=RealWeatherSync</PathMap>
+	</PropertyGroup>
+
+	<!--
+		Official Cities: Skylines II modding toolchain.
+
+		CSII_TOOLPATH is read from the *user* environment target rather than as a plain
+		$(CSII_TOOLPATH) property, so the build also works in a shell whose environment
+		block predates the toolchain installation. The two-argument overload requires the
+		fully qualified 'EnvironmentVariableTarget.User' spelling.
+
+		When the toolchain is present, Mod.props supplies $(ManagedPath), the game's
+		mscorlib and the Unity Entities source generators, and Mod.targets supplies the
+		ModPostProcessor, DeployWIP and ModPublisher pipeline.
+
+		The fallback branch below keeps the project buildable on a machine without the
+		toolchain (referencing the game assemblies directly and copying to the local Mods
+		folder). It is inert whenever the toolchain is installed.
+	-->
+	<PropertyGroup>
+		<CsiiToolPath>$([System.Environment]::GetEnvironmentVariable('CSII_TOOLPATH', 'EnvironmentVariableTarget.User'))</CsiiToolPath>
+		<UseCsiiToolchain>false</UseCsiiToolchain>
+		<UseCsiiToolchain Condition="'$(CsiiToolPath)' != '' AND Exists('$(CsiiToolPath)\Mod.props')">true</UseCsiiToolchain>
+	</PropertyGroup>
+
+	<Import Project="$(CsiiToolPath)\Mod.props" Condition="'$(UseCsiiToolchain)' == 'true'" />
+	<Import Project="$(CsiiToolPath)\Mod.targets" Condition="'$(UseCsiiToolchain)' == 'true'" />
+
+	<!-- ================= Fallback: no official toolchain installed ================= -->
+
+	<PropertyGroup Condition="'$(UseCsiiToolchain)' != 'true'">
+		<CitiesSkylines2Path Condition="'$(CitiesSkylines2Path)' == ''">$(CSII_GAMEPATH)</CitiesSkylines2Path>
+		<CitiesSkylines2Path Condition="'$(CitiesSkylines2Path)' == '' AND Exists('C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed')">C:\Program Files (x86)\Steam\steamapps\common\Cities Skylines II</CitiesSkylines2Path>
+		<CitiesSkylines2Path Condition="'$(CitiesSkylines2Path)' == '' AND Exists('C:\Program Files\Steam\steamapps\common\Cities Skylines II\Cities2_Data\Managed')">C:\Program Files\Steam\steamapps\common\Cities Skylines II</CitiesSkylines2Path>
+		<CitiesSkylines2Path Condition="'$(CitiesSkylines2Path)' == '' AND Exists('D:\SteamLibrary\steamapps\common\Cities Skylines II\Cities2_Data\Managed')">D:\SteamLibrary\steamapps\common\Cities Skylines II</CitiesSkylines2Path>
+		<ManagedPath>$(CitiesSkylines2Path)\Cities2_Data\Managed</ManagedPath>
+
+		<CsiiUserModsPath>$(USERPROFILE)\AppData\LocalLow\Colossal Order\Cities Skylines II\Mods</CsiiUserModsPath>
+		<DeployDir Condition="'$(DeployDir)' == ''">$(CsiiUserModsPath)\RealWeatherSync</DeployDir>
+		<DeployToGameMods Condition="'$(DeployToGameMods)' == ''">true</DeployToGameMods>
+	</PropertyGroup>
+
+	<Target Name="VerifyGamePath" BeforeTargets="BeforeBuild" Condition="'$(UseCsiiToolchain)' != 'true'">
+		<Error Condition="!Exists('$(ManagedPath)\Game.dll')"
+		       Text="Could not locate the Cities: Skylines II managed assemblies. Looked for '$(ManagedPath)\Game.dll'. Install the modding toolchain from the game's Options -&gt; Modding, pass -p:CitiesSkylines2Path=&quot;&lt;game folder&gt;&quot;, or set the CSII_GAMEPATH environment variable." />
+	</Target>
+
+	<Target Name="DeployToUserMods" AfterTargets="Build"
+	        Condition="'$(UseCsiiToolchain)' != 'true' AND '$(DeployToGameMods)' == 'true'">
+		<MakeDir Directories="$(DeployDir)" />
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DeployDir)" SkipUnchangedFiles="false" />
+		<Message Importance="high" Text="Real Weather Sync deployed to $(DeployDir) (toolchain not installed; fallback deploy)" />
+	</Target>
+
+	<!--
+		net48 reference assemblies, so the project also builds without Visual Studio or a
+		targeting pack installed. Not needed when the toolchain is active - Mod.props
+		references the game's own mscorlib and puts $(ManagedPath) on the assembly search
+		path, and having both would produce two mscorlib identities.
+	-->
+	<ItemGroup Condition="'$(UseCsiiToolchain)' != 'true'">
+		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- ============================ Game assemblies ============================ -->
+	<!-- Private=false: never copy these next to the mod, the game already has them. -->
+
+	<ItemGroup>
+		<Reference Include="Game">
+			<HintPath>$(ManagedPath)\Game.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Core">
+			<HintPath>$(ManagedPath)\Colossal.Core.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Logging">
+			<HintPath>$(ManagedPath)\Colossal.Logging.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.IO">
+			<HintPath>$(ManagedPath)\Colossal.IO.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.IO.AssetDatabase">
+			<HintPath>$(ManagedPath)\Colossal.IO.AssetDatabase.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Localization">
+			<HintPath>$(ManagedPath)\Colossal.Localization.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.Mathematics">
+			<HintPath>$(ManagedPath)\Colossal.Mathematics.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.PSI.Common">
+			<HintPath>$(ManagedPath)\Colossal.PSI.Common.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Colossal.UI.Binding">
+			<HintPath>$(ManagedPath)\Colossal.UI.Binding.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.Collections">
+			<HintPath>$(ManagedPath)\Unity.Collections.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.Entities">
+			<HintPath>$(ManagedPath)\Unity.Entities.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.Mathematics">
+			<HintPath>$(ManagedPath)\Unity.Mathematics.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.Burst">
+			<HintPath>$(ManagedPath)\Unity.Burst.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Unity.InputSystem">
+			<HintPath>$(ManagedPath)\Unity.InputSystem.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<!-- Ships with the game; used for defensive JSON parsing of the Open-Meteo responses. -->
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>$(ManagedPath)\Newtonsoft.Json.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<!-- Part of the .NET Framework, but not referenced by default for a class library. -->
+		<Reference Include="System.Net.Http">
+			<HintPath>$(ManagedPath)\System.Net.Http.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Update="System">
+			<Private>false</Private>
+		</Reference>
+		<Reference Update="System.Core">
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="Properties\PublishConfiguration.xml" />
+	</ItemGroup>
+
+	<!--
+		Mod.targets' DeployWIP copies every file in $(OutDir) to the local Mods folder,
+		and ModPublisher uploads that same folder. Strip the debug symbols after the post
+		processor has consumed them but before the deploy runs, so the package contains
+		only RealWeatherSync.dll.
+
+		Mod.targets declares RunModPostProcessor before DeployWIP, so anchoring to
+		RunModPostProcessor places this target between the two.
+	-->
+	<Target Name="RemoveSymbolsBeforeDeploy"
+	        Condition="'$(UseCsiiToolchain)' == 'true'"
+	        AfterTargets="RunModPostProcessor"
+	        BeforeTargets="DeployWIP">
+		<ItemGroup>
+			<SymbolsToStrip Include="$(OutDir)**\*.pdb" />
+			<SymbolsToStrip Include="$(OutDir)**\*.xml" />
+		</ItemGroup>
+		<Delete Files="@(SymbolsToStrip)" />
+		<Message Importance="high" Text="Stripped @(SymbolsToStrip->Count()) symbol/doc file(s) from $(OutDir) before deployment." />
+	</Target>
+
+	<!--
+		Fail the build rather than ship a package containing anything unexpected. Runs
+		after the deploy so it inspects exactly what would be uploaded.
+
+		Expected contents are the mod assembly plus the three Burst AOT stubs the official
+		ModPostProcessor emits for its default -p Windows -p macOS -p Linux targets. Those
+		are normal published-mod content; PDBs and everything else are not.
+	-->
+	<Target Name="VerifyPackageContents"
+	        Condition="'$(UseCsiiToolchain)' == 'true'"
+	        AfterTargets="DeployWIP">
+		<ItemGroup>
+			<DeployedFile Include="$(DeployDir)\**\*.*" />
+			<UnexpectedDeployedFile Include="@(DeployedFile)"
+			                        Exclude="$(DeployDir)\$(TargetName).dll;
+			                                 $(DeployDir)\$(TargetName)_win_x86_64.dll;
+			                                 $(DeployDir)\$(TargetName)_linux_x86_64.so;
+			                                 $(DeployDir)\$(TargetName)_mac_x86_64.bundle" />
+		</ItemGroup>
+		<Error Condition="'@(UnexpectedDeployedFile)' != ''"
+		       Text="Unexpected file(s) in the mod package that would be uploaded: @(UnexpectedDeployedFile)" />
+		<Message Importance="high" Text="Package verified: $(DeployDir) contains only the mod assembly and the official Burst artifacts." />
+	</Target>
+
+</Project>

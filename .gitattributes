@@ -1,0 +1,10 @@
+# Normalise line endings so the repo stays clean across machines.
+* text=auto eol=lf
+
+*.sln    text eol=crlf
+*.csproj text eol=lf
+*.cs     text eol=lf
+*.xml    text eol=lf
+*.md     text eol=lf
+
+*.png binary
