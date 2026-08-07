@@ -1,0 +1,141 @@
+<Publish>
+	<!--
+		Assigned by Paradox Mods on the first publish (2026-08-06). This id pins every
+		later `Update` / `NewVersion` run to THIS listing, so a release can never
+		overwrite an unrelated mod.
+
+		Because it is now set, the `Publish` command will deliberately fail
+		("ModId must be not set or be equal to 0 ... to publish a new mod"). That is the
+		intended guard: use `Update` for metadata-only changes and `NewVersion` to ship a
+		new build. Both require <ChangeLog> to be filled in.
+	-->
+	<ModId Value="154183" />
+
+	<DisplayName Value="Real Weather Sync" />
+
+	<ShortDescription Value="Makes the in-game weather look like the current real weather of any city you choose. Purely cosmetic." />
+
+	<LongDescription>
+# Real Weather Sync
+
+The world is burning. Let your cims burn with you.
+
+## Setup
+
+1. Enable the mod.
+2. Type a city - `Lyon`, or `Lyon, France` if the name is ambiguous.
+3. Press **Apply City**.
+
+That is the whole workflow. No coordinates, no config files, no weather codes, no manual sliders.
+
+## What it does
+
+- **Temperature, clouds, rain and fog** taken from the real city, refreshed every 15, 30 or 60 minutes - your call.
+- **No setup friction.** Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
+- **Smooth two-minute fades** between readings, on real time. Pausing or fast-forwarding the simulation does not disturb them.
+- **Offline-proof.** Lost your connection? It holds the last good reading instead of dumping you into a cloudless void.
+- **A live status panel** showing what was measured and what was applied.
+
+## What it does NOT do
+
+**Strictly cosmetic.** It does not touch the simulation, citizens, traffic, economy or services. It does not move the clock, the date, the season or the day/night cycle. It does not summon thunderstorms, auroras or disasters. And it writes **nothing** into your savegame.
+
+The only things it changes are the same four visual climate values the game's own developer tools expose.
+
+## Known limitation: rain vs snow
+
+The game decides rain-or-snow from the visual temperature - there is no "draw snow" switch for mods. So when it is genuinely snowing somewhere mild, **Show snow when it is really snowing** (on by default) nudges the visual temperature just below freezing so you actually get snowflakes. The displayed temperature is then a bit off. Turn it off if you would rather have an honest thermometer than honest snow. Either way the season and date stay untouched.
+
+## Compatibility
+
+**Do not run this alongside another weather-overriding mod** - Time and Weather Anarchy, Weather Plus, Nice Weather, day/night switchers. Two mods fighting over the same climate values ends badly.
+
+Real Weather Sync watches for the known ones and stands down if it spots one, reporting *"Incompatible weather mod active"*. That check matches on mod names, so it is a guard rail, not a guarantee.
+
+No dependencies. No Harmony. Public game APIs only.
+
+## Privacy
+
+Two things leave your PC: **the city name you type** (to Open-Meteo's geocoder) and **the coordinates it returns** (to Open-Meteo's forecast endpoint). That is it. No telemetry, no analytics, no identifiers.
+
+## Licence and attribution
+
+MIT. Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+	</LongDescription>
+
+	<Thumbnail Value="Properties/Thumbnail.png" />
+
+	<!--
+		=====================================================================
+		WARNING - THESE FIELDS ARE DESTRUCTIVE ON EVERY Update / NewVersion
+		=====================================================================
+		ModPublisher's PrepareMetadata calls WithForumLinks, WithExternalLinks,
+		WithDependencies and WithTags UNCONDITIONALLY. Anything not declared below is
+		sent as an empty set and therefore CLEARED on the live listing - including
+		values that were added through the Paradox Mods website.
+
+		Screenshots are the one exception: PrepareScreenshots skips WithScreenshots
+		entirely when none are configured, so website-uploaded screenshots survive.
+
+		Lesson learned the hard way: the forum link added on the website was wiped by
+		the 2026-08-06 13:48 metadata update because it was missing here. Keep every
+		link you want to keep in this file.
+		=====================================================================
+	-->
+
+	<!--
+		"Code Mod" is the only tag in the Paradox Mods vocabulary that applies here; the
+		remaining tags are asset/prefab categories. There is no weather or visual tag.
+	-->
+	<Tag Value="Code Mod" />
+
+	<!--
+		Discussion thread. Stored as the thread root rather than a #post-... anchor, so the
+		link stays meaningful as the thread grows. Must stay declared here: an absent
+		ForumLink is sent as an empty set and clears the link on the live listing.
+	-->
+	<ForumLink Value="https://forum.paradoxplaza.com/forum/threads/mod-real-weather-sync.1937641/" />
+
+	<!--
+		Optional. Allowed Type values (exact spelling, from ModPublisher.ExternalType):
+		discord, github, youtube, twitch, x, paypal, patreon, buymeacoffee, kofi,
+		crowdin, gitlab, gofundme. There is no generic "website" type.
+		<ExternalLink Type="github" Url="https://github.com/..." />
+	-->
+
+	<ModVersion Value="1.0.0" />
+
+	<!-- Built and verified against game build 1.6.0f1. -->
+	<GameVersion Value="1.6.*" />
+
+	<!-- Public | Unlisted | Private -->
+	<AccessLevel Value="Public" />
+
+	<!--
+		No <Dependency> elements on purpose: Real Weather Sync is fully standalone and in
+		particular does NOT depend on Time and Weather Anarchy.
+		No <RequiredDLC> elements: the mod works with the base game.
+	-->
+
+	<!--
+		ChangeLog is only read by the `Update` and `NewVersion` commands; the initial
+		`Publish` ignores it. Kept here so the 1.0.0 notes are version-controlled and the
+		next release can start from them.
+	-->
+	<ChangeLog>
+# 1.0.0
+
+First public release.
+
+- Resolve any real city by name (`City` or `City, Country`) through Open-Meteo geocoding.
+- Fetch current conditions every 15, 30 or 60 minutes.
+- Override temperature, cloudiness, precipitation and fog - visual only.
+- Documented, clamped mapping: piecewise rain and snow intensity curves, a WMO weather-code
+  intensity floor, and a conservative fog curve based on fog codes and visibility.
+- Smooth 120 second transitions driven by real time, unaffected by pause or simulation speed.
+- Retains the last good reading, so a failed refresh never produces zeroed or extreme weather.
+- Retry backoff and single-flight requests; the API is never hammered.
+- Detects known weather-overriding mods and stands down when one is active.
+- Live status panel and full en-US localisation.
+	</ChangeLog>
+</Publish>
