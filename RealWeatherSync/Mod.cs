@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Threading;
 using Colossal.IO.AssetDatabase;
 using Colossal.Logging;
@@ -26,7 +27,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
 
         private const string LocaleId = "en-US";
 
@@ -47,6 +48,7 @@ namespace RealWeatherSync
         private static OpenMeteoClient _client;
         private static LocaleEN _locale;
         private static int _resetRequested;
+        private static int _skipTransitionRequested;
 
         /// <summary>
         /// False while the settings object is being deserialised, so the property
@@ -86,6 +88,9 @@ namespace RealWeatherSync
 
             _client = new OpenMeteoClient("RealWeatherSync/" + Version + " (Cities Skylines II mod)");
             Coordinator = new WeatherCoordinator(_client, _client, Log);
+
+            Coordinator.TimeShiftHours = Settings.TimeShiftHours;
+            StatusReport.SetOppositeDay(Settings.OppositeDay);
 
             var stored = Settings.BuildStoredLocation();
             if (stored != null)
@@ -234,6 +239,124 @@ namespace RealWeatherSync
             Coordinator.RequestImmediateRefresh();
         }
 
+        /// <summary>Refresh, then snap to the result instead of fading into it.</summary>
+        internal static void OnApplyImmediatelyPressed()
+        {
+            if (!_ready || Coordinator == null)
+            {
+                return;
+            }
+
+            Log.Info("Immediate apply requested by the player.");
+            OverridesSuspended = false;
+            Interlocked.Exchange(ref _skipTransitionRequested, 1);
+            Coordinator.InvalidateSchedule();
+            Coordinator.RequestImmediateRefresh();
+        }
+
+        internal static void OnSearchCityPressed()
+        {
+            if (!_ready || Settings == null || Coordinator == null)
+            {
+                return;
+            }
+
+            try
+            {
+                Settings.ApplyAndSave();
+            }
+            catch (Exception e)
+            {
+                Log.Warn("Could not save the settings before searching: " + e.Message);
+            }
+
+            Coordinator.RequestSearch(Settings.CityQuery);
+        }
+
+        /// <summary>
+        /// A city was picked from the search results dropdown. The value is the index into
+        /// <see cref="WeatherCoordinator.Candidates"/>; an empty value is the "select..." row.
+        /// </summary>
+        internal static void OnSearchResultSelected(string value)
+        {
+            if (!_ready || Coordinator == null || string.IsNullOrEmpty(value))
+            {
+                return;
+            }
+
+            var candidates = Coordinator.Candidates;
+            int index;
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out index))
+            {
+                return;
+            }
+
+            if (candidates == null || index < 0 || index >= candidates.Count)
+            {
+                return;
+            }
+
+            OverridesSuspended = false;
+            Coordinator.ApplyCandidate(candidates[index]);
+        }
+
+        /// <summary>A city was picked from the recent-cities dropdown.</summary>
+        internal static void OnFavouriteSelected(string value)
+        {
+            if (!_ready || Settings == null || Coordinator == null || string.IsNullOrEmpty(value))
+            {
+                return;
+            }
+
+            var favourites = Settings.Favourites;
+            int index;
+            if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out index))
+            {
+                return;
+            }
+
+            if (index < 0 || index >= favourites.Count)
+            {
+                return;
+            }
+
+            OverridesSuspended = false;
+            Coordinator.ApplyCandidate(favourites[index]);
+        }
+
+        internal static void OnFollowGameClockChanged(bool enabled)
+        {
+            if (!_ready || Coordinator == null)
+            {
+                return;
+            }
+
+            Log.Info(enabled
+                ? "Following the in-game clock: weather now tracks the last 24 hours by in-game hour."
+                : "Following the in-game clock disabled: back to the current reading.");
+
+            // The manual shift is ignored while the clock drives the choice of hour.
+            Coordinator.TimeShiftHours = enabled ? 0 : (Settings != null ? Settings.TimeShiftHours : 0);
+            Coordinator.RearmSnapshotPickup();
+        }
+
+        internal static void OnTimeShiftChanged(int hours)
+        {
+            if (!_ready || Coordinator == null)
+            {
+                return;
+            }
+
+            Log.Info("Weather time shift set to " + hours + " h (the game clock is not affected).");
+            Coordinator.TimeShiftHours = hours;
+        }
+
+        /// <summary>Consumed once by the system: apply the next target without fading.</summary>
+        internal static bool ConsumeSkipTransitionRequest()
+        {
+            return Interlocked.Exchange(ref _skipTransitionRequested, 0) == 1;
+        }
+
         internal static void OnResetToGameWeatherPressed()
         {
             if (!_ready)
@@ -266,6 +389,11 @@ namespace RealWeatherSync
             if (!_ready || Coordinator == null)
             {
                 return;
+            }
+
+            if (Settings != null)
+            {
+                StatusReport.SetOppositeDay(Settings.OppositeDay);
             }
 
             Coordinator.RearmSnapshotPickup();

@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using RealWeatherSync.Localization;
+using RealWeatherSync.Mapping;
 using RealWeatherSync.Models;
 
 namespace RealWeatherSync.Diagnostics
@@ -24,6 +25,16 @@ namespace RealWeatherSync.Diagnostics
         private static ClimateTarget _lastTarget;
         private static bool _hasTarget;
         private static bool _overridesActive;
+        private static bool _oppositeDay;
+
+        /// <summary>Lets the status block label a result that was deliberately inverted.</summary>
+        public static void SetOppositeDay(bool active)
+        {
+            lock (Gate)
+            {
+                _oppositeDay = active;
+            }
+        }
 
         public static StatusKind Kind
         {
@@ -107,6 +118,7 @@ namespace RealWeatherSync.Diagnostics
                 _lastSnapshot = null;
                 _hasTarget = false;
                 _overridesActive = false;
+                _oppositeDay = false;
             }
         }
 
@@ -144,6 +156,8 @@ namespace RealWeatherSync.Diagnostics
                     return Translation.Get(LocaleKeys.StatusRefreshing, "Refreshing weather");
                 case StatusKind.Connected:
                     return Translation.Get(LocaleKeys.StatusConnected, "Connected");
+                case StatusKind.CandidatesReady:
+                    return Translation.Get(LocaleKeys.StatusCandidatesReady, "Pick a city from the search results");
                 case StatusKind.Offline:
                     return Translation.Get(LocaleKeys.StatusOffline, "Offline - using last valid weather");
                 case StatusKind.ErrorResolvingCity:
@@ -216,6 +230,7 @@ namespace RealWeatherSync.Diagnostics
             ClimateTarget target;
             bool hasTarget;
             bool overridesActive;
+            bool oppositeDay;
 
             lock (Gate)
             {
@@ -223,6 +238,7 @@ namespace RealWeatherSync.Diagnostics
                 target = _lastTarget;
                 hasTarget = _hasTarget;
                 overridesActive = _overridesActive;
+                oppositeDay = _oppositeDay;
             }
 
             if (snapshot == null)
@@ -231,17 +247,41 @@ namespace RealWeatherSync.Diagnostics
             }
 
             var ci = CultureInfo.CurrentCulture;
-            var text =
-                Translation.Get(LocaleKeys.WeatherObserved, "Observed") + ": " +
-                snapshot.TemperatureCelsius.ToString("0.0", ci) + " C, " +
-                Translation.Get(LocaleKeys.WeatherClouds, "clouds") + " " +
-                snapshot.CloudCoverPercent.ToString("0", ci) + "%, " +
-                Translation.Get(LocaleKeys.WeatherPrecipitation, "precipitation") + " " +
-                snapshot.PrecipitationMm.ToString("0.00", ci) + " mm/h, " +
-                Translation.Get(LocaleKeys.WeatherSnow, "snow") + " " +
-                snapshot.SnowfallCm.ToString("0.00", ci) + " cm/h, " +
-                Translation.Get(LocaleKeys.WeatherCode, "WMO code") + " " +
-                snapshot.WeatherCode.ToString(ci);
+
+            // Human-readable condition first: it is the line most players actually read.
+            var text = Translation.Get(
+                           WeatherCodes.LocaleIdFor(snapshot.WeatherCode),
+                           WeatherCodes.EnglishFor(snapshot.WeatherCode));
+
+            if (snapshot.TimeShiftHours != 0)
+            {
+                var hours = Math.Abs(snapshot.TimeShiftHours).ToString(ci);
+                var pattern = snapshot.TimeShiftHours < 0
+                    ? Translation.Get(LocaleKeys.WeatherTimeShiftPast, "{0} h in the past")
+                    : Translation.Get(LocaleKeys.WeatherTimeShiftFuture, "{0} h ahead (forecast)");
+
+                string shiftText;
+                try
+                {
+                    shiftText = string.Format(ci, pattern, hours);
+                }
+                catch (FormatException)
+                {
+                    shiftText = hours + " h";
+                }
+
+                text += "  [" + shiftText + "]";
+            }
+
+            text += Environment.NewLine +
+                    Translation.Get(LocaleKeys.WeatherObserved, "Observed") + ": " +
+                    TemperatureDisplay.Format(snapshot.TemperatureCelsius) + ", " +
+                    Translation.Get(LocaleKeys.WeatherClouds, "clouds") + " " +
+                    snapshot.CloudCoverPercent.ToString("0", ci) + "%, " +
+                    Translation.Get(LocaleKeys.WeatherPrecipitation, "precipitation") + " " +
+                    snapshot.PrecipitationMm.ToString("0.00", ci) + " mm/h, " +
+                    Translation.Get(LocaleKeys.WeatherSnow, "snow") + " " +
+                    snapshot.SnowfallCm.ToString("0.00", ci) + " cm/h";
 
             if (snapshot.VisibilityMeters.HasValue)
             {
@@ -253,13 +293,18 @@ namespace RealWeatherSync.Diagnostics
             {
                 text += Environment.NewLine +
                         Translation.Get(LocaleKeys.WeatherApplied, "Applied") + ": " +
-                        target.TemperatureCelsius.ToString("0.0", ci) + " C, " +
+                        TemperatureDisplay.Format(target.TemperatureCelsius) + ", " +
                         Translation.Get(LocaleKeys.WeatherClouds, "clouds") + " " +
                         (target.Cloudiness * 100f).ToString("0", ci) + "%, " +
                         Translation.Get(LocaleKeys.WeatherPrecipitation, "precipitation") + " " +
                         (target.Precipitation * 100f).ToString("0", ci) + "%, " +
                         Translation.Get(LocaleKeys.WeatherFog, "fog") + " " +
                         (target.Fog * 100f).ToString("0", ci) + "%";
+
+                if (oppositeDay)
+                {
+                    text += "  [" + Translation.Get(LocaleKeys.WeatherOppositeDay, "Opposite day") + "]";
+                }
             }
 
             text += Environment.NewLine + (overridesActive

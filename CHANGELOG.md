@@ -3,6 +3,47 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-08-07
+
+Usability release. The weather mapping itself is unchanged.
+
+### Added
+
+- **Follow the in-game clock** (opt-in, off by default). Instead of one frozen reading, the mod
+  walks the city's last 24 hours of real weather, choosing the hour that matches the in-game
+  clock: at 15:00 in game you get the city's most recent real 15:00. Values are interpolated
+  continuously between the two bracketing hours, so no fade is involved — the transition settings
+  and the manual time shift are disabled while it is on.
+  The in-game clock is **read only**: `PlanetarySystem.time` is queried, never assigned, so the
+  time, date, season and day/night cycle are untouched. Costs no extra requests — the hourly
+  series was already part of the response (`Models/WeatherTimeline.cs`).
+- **City search.** A `Search` button lists every geocoding match with region, country and
+  coordinates in a dropdown; picking one applies it immediately. The old `Apply City` button is
+  still there for the "best match, no questions" path.
+- **Recent cities.** The last 10 resolved cities are remembered and offered in a dropdown; a
+  pick switches instantly with no lookup. Persisted as a flat delimited string
+  (`Settings/FavouriteCities.cs`) rather than a nested structure.
+- **`Apply Immediately`** button: refreshes and snaps to the result, and collapses a transition
+  already in progress.
+- **Transition length slider**, 0-600 s, replacing the hardcoded 120 s constant.
+- **Human-readable conditions** in the status panel, from the WMO code
+  (`Mapping/WeatherCodes.cs`), fully localised.
+- **Temperature unit awareness**: the status panel follows the game's own
+  `InterfaceSettings.temperatureUnit` (Celsius / Fahrenheit / Kelvin). Only the display is
+  converted; everything internal stays Celsius.
+- **"Options nobody asked for"** group:
+  - **Time shift**, -24 to +24 hours, reading a past or forecast hour instead of now. Implemented
+    by indexing Open-Meteo's hourly series from the location's own local timestamp, so no
+    timezone arithmetic happens mod-side. The game clock is not affected.
+  - **Opposite day**, mirroring temperature around 15 °C and inverting cloudiness and
+    precipitation. Fog is deliberately not inverted.
+
+### Changed
+
+- `IWeatherService.GetCurrentWeatherAsync` became `GetWeatherAsync(lat, lon, timeShiftHours, ct)`.
+- `ILocationService` gained `SearchLocationsAsync` for multi-result lookups.
+- Source code published at https://github.com/merrinaf-tech/Real-Weather-Sync
+
 ## [1.0.0] - 2026-08-06
 
 First public release, published to Paradox Mods. Built with the official Cities: Skylines II

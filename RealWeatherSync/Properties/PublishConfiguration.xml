@@ -23,18 +23,29 @@ The world is burning. Let your cims burn with you.
 ## Setup
 
 1. Enable the mod.
-2. Type a city - `Lyon`, or `Lyon, France` if the name is ambiguous.
-3. Press **Apply City**.
+2. Type a city, press **Search**, pick yours from the results.
+3. Done.
 
-That is the whole workflow. No coordinates, no config files, no weather codes, no manual sliders.
+No coordinates, no config files, no weather codes, no manual sliders.
+
+## Two ways to run it
+
+**Live** - the default. Your city gets the chosen city's weather *right now*, refreshed every 15, 30 or 60 minutes.
+
+**Follow the in-game clock** - your city replays that city's **last 24 hours** of real weather, hour by hour, matched to your own clock.
+
+&gt; It is 10:00 in the real world and 15:00 in your city? You get the weather Lyon actually had at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day replays a full real day.
+
+The weather slides continuously between hours, so nothing ever jumps. And the in-game clock is only *read*, never changed.
 
 ## What it does
 
-- **Temperature, clouds, rain and fog** taken from the real city, refreshed every 15, 30 or 60 minutes - your call.
-- **No setup friction.** Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
-- **Smooth two-minute fades** between readings, on real time. Pausing or fast-forwarding the simulation does not disturb them.
+- Takes **temperature, clouds, rain and fog** from the real city.
+- **Search** lists every matching city with its region, country and coordinates, so you confirm the right one instead of guessing. Cities you have used before are one click away.
+- **Smooth fades** between readings, driven by real time - pausing or fast-forwarding does not disturb them. Or hit **Apply Immediately** to skip straight to the new weather.
 - **Offline-proof.** Lost your connection? It holds the last good reading instead of dumping you into a cloudless void.
-- **A live status panel** showing what was measured and what was applied.
+- A live status panel naming the conditions, in whichever temperature unit you use.
+- Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
 
 ## What it does NOT do
 
@@ -42,25 +53,28 @@ That is the whole workflow. No coordinates, no config files, no weather codes, n
 
 The only things it changes are the same four visual climate values the game's own developer tools expose.
 
-## Known limitation: rain vs snow
+## Rain vs snow
 
-The game decides rain-or-snow from the visual temperature - there is no "draw snow" switch for mods. So when it is genuinely snowing somewhere mild, **Show snow when it is really snowing** (on by default) nudges the visual temperature just below freezing so you actually get snowflakes. The displayed temperature is then a bit off. Turn it off if you would rather have an honest thermometer than honest snow. Either way the season and date stay untouched.
+The game decides rain-or-snow from the visual temperature - there is no "draw snow" switch for mods. So when it is genuinely snowing somewhere mild, **Show snow when it is really snowing** (on by default) nudges the visual temperature just below freezing. The displayed temperature is then a bit off; turn the option off if you would rather have an honest thermometer than honest snow.
 
 ## Compatibility
 
 **Do not run this alongside another weather-overriding mod** - Time and Weather Anarchy, Weather Plus, Nice Weather, day/night switchers. Two mods fighting over the same climate values ends badly.
 
-Real Weather Sync watches for the known ones and stands down if it spots one, reporting *"Incompatible weather mod active"*. That check matches on mod names, so it is a guard rail, not a guarantee.
+Real Weather Sync watches for the known ones and stands down if it spots one, reporting *"Incompatible weather mod active"*. That check matches on mod names, so it is a guard rail, not a guarantee. Nothing else is required to run it.
 
-No dependencies. No Harmony. Public game APIs only.
+## Options nobody asked for
+
+- **Time shift** - pull the weather from up to 24 hours into the past or the future.
+- **Opposite day** - warm becomes cold, clear becomes overcast, dry becomes soaking.
 
 ## Privacy
 
-Two things leave your PC: **the city name you type** (to Open-Meteo's geocoder) and **the coordinates it returns** (to Open-Meteo's forecast endpoint). That is it. No telemetry, no analytics, no identifiers.
+Two things leave your PC: **the city name you type** (to Open-Meteo's geocoder) and **the coordinates it returns** (to its forecast endpoint). That is it. No telemetry, no analytics, no identifiers.
 
-## Licence and attribution
+## Licence
 
-MIT. Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 	</LongDescription>
 
 	<Thumbnail Value="Properties/Thumbnail.png" />
@@ -106,7 +120,7 @@ MIT. Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licens
 	-->
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 
-	<ModVersion Value="1.0.0" />
+	<ModVersion Value="1.1.0" />
 
 	<!-- Built and verified against game build 1.6.0f1. -->
 	<GameVersion Value="1.6.*" />
@@ -126,19 +140,56 @@ MIT. Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licens
 		next release can start from them.
 	-->
 	<ChangeLog>
-# 1.0.0
+# 1.1.0
 
-First public release.
+## Follow the in-game clock (new, off by default)
 
-- Resolve any real city by name (`City` or `City, Country`) through Open-Meteo geocoding.
-- Fetch current conditions every 15, 30 or 60 minutes.
-- Override temperature, cloudiness, precipitation and fog - visual only.
-- Documented, clamped mapping: piecewise rain and snow intensity curves, a WMO weather-code
-  intensity floor, and a conservative fog curve based on fog codes and visibility.
-- Smooth 120 second transitions driven by real time, unaffected by pause or simulation speed.
-- Retains the last good reading, so a failed refresh never produces zeroed or extreme weather.
-- Retry backoff and single-flight requests; the API is never hammered.
-- Detects known weather-overriding mods and stands down when one is active.
-- Live status panel and full en-US localisation.
+The headline feature. Normally the mod shows the chosen city's weather right now, as one reading.
+Turn this on and it instead walks that city's **last 24 hours** of real weather, picking the hour
+that matches your in-game clock.
+
+It is 10:00 in the real world and 15:00 in your city? You get the weather that city actually had
+at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day
+replays a full real day, in order, instead of holding one frozen snapshot.
+
+- The weather slides continuously between the two bracketing hours, so nothing ever jumps. Fades
+  are not involved, so the transition settings and the manual time shift are disabled while this
+  mode is on.
+- The in-game clock is only **read**, never changed. Time, date, season and the day/night cycle
+  stay exactly as the game set them.
+- It costs no extra data: those hourly readings were already part of the request.
+
+## Pick your city instead of guessing
+
+- New **Search** button lists every matching city with its region, country and coordinates, so
+  you can confirm you got the right one before applying it.
+- New **Recent cities** dropdown remembers the last 10 cities you used. Switching back is one
+  click and needs no lookup.
+
+## Faster control
+
+- New **Apply Immediately** button refreshes and jumps straight to the new weather, skipping the
+  fade. It also cuts short a transition already running.
+- The transition length is now a slider (0-600 s) instead of being fixed at 120 seconds.
+
+## Clearer status
+
+- The status panel now names the conditions - "Light drizzle", "Heavy snow", "Fog" - instead of
+  only showing a WMO code number.
+- Temperatures follow the unit you picked in the game's own interface settings: Celsius,
+  Fahrenheit or Kelvin.
+
+## Options nobody asked for (new section)
+
+- **Time shift**: pull the weather from up to 24 hours into the past or the future.
+- **Opposite day**: mirror the weather. Warm becomes cold, clear becomes overcast, dry becomes
+  soaking. Fog is left alone, because permanent fog just hides the city.
+
+## Also
+
+- Source code is now public: https://github.com/merrinaf-tech/Real-Weather-Sync
+- The description has been tightened up.
+- No change to how the weather itself is calculated. Still strictly cosmetic, still writes
+  nothing to your savegame.
 	</ChangeLog>
 </Publish>

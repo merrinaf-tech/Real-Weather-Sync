@@ -17,6 +17,9 @@ namespace RealWeatherSync.Diagnostics
         /// <summary>A weather request is in flight.</summary>
         Refreshing,
 
+        /// <summary>A search returned candidates; the player still has to pick one.</summary>
+        CandidatesReady,
+
         /// <summary>A city is resolved and at least one weather response has been received.</summary>
         Connected,
 

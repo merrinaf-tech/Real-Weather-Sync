@@ -21,6 +21,12 @@ namespace RealWeatherSync.Mapping
         /// <summary>The game's freezing temperature, read from ClimateSystem.freezingTemperature.</summary>
         public float FreezingTemperatureCelsius;
 
+        /// <summary>
+        /// Novelty toggle: mirror the mapped result. Warm becomes cold, clear becomes overcast,
+        /// dry becomes wet. Fog is deliberately left alone - see <see cref="WeatherMapper.ApplyOppositeDay"/>.
+        /// </summary>
+        public bool OppositeDay;
+
         public static WeatherMappingOptions Default
         {
             get
@@ -29,6 +35,7 @@ namespace RealWeatherSync.Mapping
                 o.SyncFog = true;
                 o.ForceSnowAppearance = true;
                 o.FreezingTemperatureCelsius = 0f;
+                o.OppositeDay = false;
                 return o;
             }
         }
@@ -148,7 +155,36 @@ namespace RealWeatherSync.Mapping
             target.Cloudiness = MapCloudiness(snapshot.CloudCoverPercent);
             target.Precipitation = MapPrecipitation(snapshot);
             target.Fog = options.SyncFog ? MapFog(snapshot) : 0f;
+
+            if (options.OppositeDay)
+            {
+                target = ApplyOppositeDay(target);
+            }
+
             return target;
+        }
+
+        /// <summary>The temperature that <see cref="ApplyOppositeDay"/> mirrors around.</summary>
+        public const float OppositeDayPivotCelsius = 15f;
+
+        /// <summary>
+        /// Mirrors temperature around <see cref="OppositeDayPivotCelsius"/> and flips cloudiness
+        /// and precipitation.
+        ///
+        /// Fog is intentionally NOT inverted: a clear day would become permanent dense fog, which
+        /// hides the city entirely and stops being funny within seconds. The joke has to remain
+        /// something you can actually look at.
+        /// </summary>
+        public static ClimateTarget ApplyOppositeDay(ClimateTarget target)
+        {
+            ClimateTarget flipped;
+            flipped.TemperatureCelsius = Clamp(
+                2f * OppositeDayPivotCelsius - target.TemperatureCelsius,
+                MinTemperatureCelsius, MaxTemperatureCelsius);
+            flipped.Cloudiness = Clamp(MaxCloudiness - target.Cloudiness, MinCloudiness, MaxCloudiness);
+            flipped.Precipitation = Clamp(MaxPrecipitation - target.Precipitation, MinPrecipitation, MaxPrecipitation);
+            flipped.Fog = target.Fog;
+            return flipped;
         }
 
         /// <summary>Real Celsius, clamped to the range the game accepts.</summary>

@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
 using Colossal.IO.AssetDatabase;
 using Colossal.Json;
 using Game.Modding;
 using Game.Settings;
+using Game.UI.Widgets;
 using RealWeatherSync.Diagnostics;
 using RealWeatherSync.Localization;
 using RealWeatherSync.Models;
+using RealWeatherSync.Services;
 
 namespace RealWeatherSync.Settings
 {
@@ -13,32 +17,44 @@ namespace RealWeatherSync.Settings
     /// Options page for Real Weather Sync.
     ///
     /// The persisted state is deliberately small: the city the player typed, the
-    /// coordinates that were resolved from it, and a handful of preferences.
-    /// Nothing here ever ends up in a city save.
+    /// coordinates that were resolved from it, a short most-recently-used list, and a
+    /// handful of preferences. Nothing here ever ends up in a city save.
     /// </summary>
     [FileLocation("ModsSettings/RealWeatherSync/RealWeatherSync")]
-    [SettingsUIGroupOrder(GeneralGroup, ActionsGroup, StatusGroup, AdvancedGroup, AboutGroup)]
-    [SettingsUIShowGroupName(GeneralGroup, ActionsGroup, StatusGroup, AdvancedGroup, AboutGroup)]
+    [SettingsUIGroupOrder(GeneralGroup, SearchGroup, ActionsGroup, StatusGroup, AdvancedGroup, SillyGroup, AboutGroup)]
+    [SettingsUIShowGroupName(GeneralGroup, SearchGroup, ActionsGroup, StatusGroup, AdvancedGroup, SillyGroup, AboutGroup)]
     public class RealWeatherSettings : ModSetting
     {
         public const string MainSection = "Main";
 
         public const string GeneralGroup = "GeneralGroup";
+        public const string SearchGroup = "SearchGroup";
         public const string ActionsGroup = "ActionsGroup";
         public const string StatusGroup = "StatusGroup";
         public const string AdvancedGroup = "AdvancedGroup";
+        public const string SillyGroup = "SillyGroup";
         public const string AboutGroup = "AboutGroup";
 
-        /// <summary>Transition length in seconds when smoothing is enabled.</summary>
-        public const float TransitionDurationSeconds = 120f;
+        public const int MinTransitionSeconds = 0;
+        public const int MaxTransitionSeconds = 600;
+        public const int DefaultTransitionSeconds = 120;
+
+        /// <summary>Sentinel used by the dropdowns when nothing is selected.</summary>
+        private const string NoSelection = "";
 
         private bool _enableRealWeather = true;
         private string _cityQuery = string.Empty;
         private bool _smoothTransitions = true;
+        private int _transitionSeconds = DefaultTransitionSeconds;
         private UpdateIntervalOption _updateInterval = UpdateIntervalOption.FifteenMinutes;
         private bool _syncFog = true;
         private bool _forceSnowAppearance = true;
         private bool _ignoreModConflicts;
+        private bool _oppositeDay;
+        private int _timeShiftHours;
+        private bool _followGameClock;
+        private string _selectedCandidate = NoSelection;
+        private string _selectedFavourite = NoSelection;
 
         public RealWeatherSettings(IMod mod)
             : base(mod)
@@ -65,12 +81,25 @@ namespace RealWeatherSync.Settings
             }
         }
 
+        /// <summary>
+        /// Opt-in. Instead of one frozen reading, walk the last 24 hours of real weather using
+        /// the in-game hour: at 15:00 in game you get the city's real weather from the most
+        /// recent 15:00. The in-game clock is only *read* - never set.
+        /// </summary>
         [SettingsUISection(MainSection, GeneralGroup)]
-        [SettingsUITextInput]
-        public string CityQuery
+        public bool FollowGameClock
         {
-            get { return _cityQuery; }
-            set { _cityQuery = value ?? string.Empty; }
+            get { return _followGameClock; }
+            set
+            {
+                if (_followGameClock == value)
+                {
+                    return;
+                }
+
+                _followGameClock = value;
+                Mod.OnFollowGameClockChanged(value);
+            }
         }
 
         [SettingsUISection(MainSection, GeneralGroup)]
@@ -78,6 +107,15 @@ namespace RealWeatherSync.Settings
         {
             get { return _smoothTransitions; }
             set { _smoothTransitions = value; }
+        }
+
+        [SettingsUISection(MainSection, GeneralGroup)]
+        [SettingsUISlider(min = MinTransitionSeconds, max = MaxTransitionSeconds, step = 10, unit = "integer", scalarMultiplier = 1)]
+        [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsTransitionLengthUnavailable))]
+        public int TransitionSeconds
+        {
+            get { return _transitionSeconds; }
+            set { _transitionSeconds = value < MinTransitionSeconds ? MinTransitionSeconds : (value > MaxTransitionSeconds ? MaxTransitionSeconds : value); }
         }
 
         [SettingsUISection(MainSection, GeneralGroup)]
@@ -94,6 +132,200 @@ namespace RealWeatherSync.Settings
                 _updateInterval = value;
                 Mod.OnUpdateIntervalChanged();
             }
+        }
+
+        /// <summary>The transition length actually used, honouring the smoothing toggle.</summary>
+        public float EffectiveTransitionSeconds
+        {
+            get { return _smoothTransitions ? _transitionSeconds : 0f; }
+        }
+
+        public bool IsTransitionLengthUnavailable()
+        {
+            // Following the in-game clock produces a continuously interpolated value, so the
+            // fade machinery is bypassed and its length means nothing.
+            return !_smoothTransitions || _followGameClock;
+        }
+
+        /// <summary>
+        /// The manual time shift and the clock-following mode both decide "which hour", so
+        /// letting them stack would just be confusing. Clock-following wins.
+        /// </summary>
+        public bool IsTimeShiftUnavailable()
+        {
+            return _followGameClock;
+        }
+
+        // ------------------------------------------------------------------
+        // City search
+        // ------------------------------------------------------------------
+
+        [SettingsUISection(MainSection, SearchGroup)]
+        [SettingsUITextInput]
+        public string CityQuery
+        {
+            get { return _cityQuery; }
+            set { _cityQuery = value ?? string.Empty; }
+        }
+
+        [SettingsUISection(MainSection, SearchGroup)]
+        [SettingsUIButton]
+        public bool SearchCity
+        {
+            set { Mod.OnSearchCityPressed(); }
+        }
+
+        /// <summary>
+        /// The candidates returned by the last search. Backed by a dropdown whose item list is
+        /// refreshed through <see cref="GetSearchResultsVersion"/>, so results appear without
+        /// reopening the options page.
+        /// </summary>
+        [SettingsUISection(MainSection, SearchGroup)]
+        [SettingsUIDropdown(typeof(RealWeatherSettings), nameof(GetSearchResultItems))]
+        [SettingsUIValueVersion(typeof(RealWeatherSettings), nameof(GetSearchResultsVersion))]
+        [Exclude]
+        public string SelectedSearchResult
+        {
+            get { return _selectedCandidate; }
+            set
+            {
+                _selectedCandidate = value ?? NoSelection;
+                Mod.OnSearchResultSelected(_selectedCandidate);
+            }
+        }
+
+        public DropdownItem<string>[] GetSearchResultItems()
+        {
+            var coordinator = Mod.Coordinator;
+            var candidates = coordinator != null ? coordinator.Candidates : null;
+
+            if (candidates == null || candidates.Count == 0)
+            {
+                return new[]
+                {
+                    new DropdownItem<string>
+                    {
+                        value = NoSelection,
+                        displayName = Translation.Get(LocaleKeys.SearchNoResults, "No results - press Search")
+                    }
+                };
+            }
+
+            var items = new DropdownItem<string>[candidates.Count + 1];
+            items[0] = new DropdownItem<string>
+            {
+                value = NoSelection,
+                displayName = Translation.Get(LocaleKeys.SearchPickOne, "Select a city...")
+            };
+
+            for (var i = 0; i < candidates.Count; i++)
+            {
+                items[i + 1] = new DropdownItem<string>
+                {
+                    value = i.ToString(CultureInfo.InvariantCulture),
+                    displayName = Describe(candidates[i])
+                };
+            }
+
+            return items;
+        }
+
+        public int GetSearchResultsVersion()
+        {
+            var coordinator = Mod.Coordinator;
+            return coordinator != null ? coordinator.CandidatesVersion : 0;
+        }
+
+        // ------------------------------------------------------------------
+        // Favourites / recent
+        // ------------------------------------------------------------------
+
+        [SettingsUISection(MainSection, SearchGroup)]
+        [SettingsUIDropdown(typeof(RealWeatherSettings), nameof(GetFavouriteItems))]
+        [SettingsUIValueVersion(typeof(RealWeatherSettings), nameof(GetFavouritesVersion))]
+        [Exclude]
+        public string SelectedFavourite
+        {
+            get { return _selectedFavourite; }
+            set
+            {
+                _selectedFavourite = value ?? NoSelection;
+                Mod.OnFavouriteSelected(_selectedFavourite);
+            }
+        }
+
+        public DropdownItem<string>[] GetFavouriteItems()
+        {
+            var favourites = Favourites;
+
+            if (favourites.Count == 0)
+            {
+                return new[]
+                {
+                    new DropdownItem<string>
+                    {
+                        value = NoSelection,
+                        displayName = Translation.Get(LocaleKeys.FavouritesEmpty, "No recent cities yet")
+                    }
+                };
+            }
+
+            var items = new DropdownItem<string>[favourites.Count + 1];
+            items[0] = new DropdownItem<string>
+            {
+                value = NoSelection,
+                displayName = Translation.Get(LocaleKeys.SearchPickOne, "Select a city...")
+            };
+
+            for (var i = 0; i < favourites.Count; i++)
+            {
+                items[i + 1] = new DropdownItem<string>
+                {
+                    value = i.ToString(CultureInfo.InvariantCulture),
+                    displayName = Describe(favourites[i])
+                };
+            }
+
+            return items;
+        }
+
+        public int GetFavouritesVersion()
+        {
+            return _favouritesVersion;
+        }
+
+        private int _favouritesVersion;
+
+        /// <summary>Most-recently-used cities, newest first.</summary>
+        [Exclude]
+        public List<LocationResult> Favourites
+        {
+            get { return FavouriteCities.Parse(FavouritesRaw); }
+        }
+
+        /// <summary>Moves a location to the front of the recent list and persists it.</summary>
+        public void RememberCity(LocationResult location)
+        {
+            if (location == null || !location.HasValidCoordinates)
+            {
+                return;
+            }
+
+            FavouritesRaw = FavouriteCities.Serialise(FavouriteCities.Promote(Favourites, location));
+            _favouritesVersion++;
+        }
+
+        private static string Describe(LocationResult location)
+        {
+            if (location == null)
+            {
+                return string.Empty;
+            }
+
+            var ci = CultureInfo.InvariantCulture;
+            return location.DisplayName + "  ·  " +
+                   location.Latitude.ToString("0.##", ci) + ", " +
+                   location.Longitude.ToString("0.##", ci);
         }
 
         // ------------------------------------------------------------------
@@ -115,6 +347,15 @@ namespace RealWeatherSync.Settings
             set { Mod.OnRefreshNowPressed(); }
         }
 
+        /// <summary>Refreshes and skips straight to the new values, ignoring the transition.</summary>
+        [SettingsUISection(MainSection, ActionsGroup)]
+        [SettingsUIButton]
+        [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsRefreshUnavailable))]
+        public bool ApplyImmediately
+        {
+            set { Mod.OnApplyImmediatelyPressed(); }
+        }
+
         [SettingsUISection(MainSection, ActionsGroup)]
         [SettingsUIButton]
         [SettingsUIConfirmation]
@@ -123,15 +364,13 @@ namespace RealWeatherSync.Settings
             set { Mod.OnResetToGameWeatherPressed(); }
         }
 
-        /// <summary>Referenced by <see cref="SettingsUIDisableByConditionAttribute"/> above.</summary>
         public bool IsRefreshUnavailable()
         {
             return !HasResolvedLocation;
         }
 
         // ------------------------------------------------------------------
-        // Status (read-only display; get-only string properties render as
-        // read-only fields and refresh automatically while the page is open)
+        // Status (read-only display)
         // ------------------------------------------------------------------
 
         [SettingsUISection(MainSection, StatusGroup)]
@@ -216,6 +455,48 @@ namespace RealWeatherSync.Settings
         }
 
         // ------------------------------------------------------------------
+        // "Options nobody asked for"
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Reads the weather from a past or future hour instead of now. Only the weather reading
+        /// moves - the game clock, date and season are untouched, as always.
+        /// </summary>
+        [SettingsUISection(MainSection, SillyGroup)]
+        [SettingsUISlider(min = -OpenMeteoClient.MaxTimeShiftHours, max = OpenMeteoClient.MaxTimeShiftHours, step = 1, unit = "integer", scalarMultiplier = 1)]
+        [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsTimeShiftUnavailable))]
+        public int TimeShiftHours
+        {
+            get { return _timeShiftHours; }
+            set
+            {
+                if (_timeShiftHours == value)
+                {
+                    return;
+                }
+
+                _timeShiftHours = value;
+                Mod.OnTimeShiftChanged(value);
+            }
+        }
+
+        [SettingsUISection(MainSection, SillyGroup)]
+        public bool OppositeDay
+        {
+            get { return _oppositeDay; }
+            set
+            {
+                if (_oppositeDay == value)
+                {
+                    return;
+                }
+
+                _oppositeDay = value;
+                Mod.OnMappingOptionsChanged();
+            }
+        }
+
+        // ------------------------------------------------------------------
         // About
         // ------------------------------------------------------------------
 
@@ -270,6 +551,10 @@ namespace RealWeatherSync.Settings
         [SettingsUIHidden]
         public float ResolvedLongitude { get; set; }
 
+        /// <summary>Recent cities, flat-encoded. See <see cref="FavouriteCities"/>.</summary>
+        [SettingsUIHidden]
+        public string FavouritesRaw { get; set; } = string.Empty;
+
         /// <summary>Refresh interval expressed in seconds.</summary>
         public double UpdateIntervalSeconds
         {
@@ -315,6 +600,7 @@ namespace RealWeatherSync.Settings
             ResolvedLongitude = (float)location.Longitude;
             HasResolvedLocation = true;
 
+            RememberCity(location);
             ApplyAndSave();
         }
 
@@ -323,10 +609,16 @@ namespace RealWeatherSync.Settings
             _enableRealWeather = true;
             _cityQuery = string.Empty;
             _smoothTransitions = true;
+            _transitionSeconds = DefaultTransitionSeconds;
             _updateInterval = UpdateIntervalOption.FifteenMinutes;
             _syncFog = true;
             _forceSnowAppearance = true;
             _ignoreModConflicts = false;
+            _oppositeDay = false;
+            _timeShiftHours = 0;
+            _followGameClock = false;
+            _selectedCandidate = NoSelection;
+            _selectedFavourite = NoSelection;
 
             HasResolvedLocation = false;
             ResolvedName = string.Empty;
@@ -337,6 +629,7 @@ namespace RealWeatherSync.Settings
             ResolvedQuery = string.Empty;
             ResolvedLatitude = 0f;
             ResolvedLongitude = 0f;
+            FavouritesRaw = string.Empty;
         }
     }
 }

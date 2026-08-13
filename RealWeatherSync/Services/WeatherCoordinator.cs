@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -55,6 +56,12 @@ namespace RealWeatherSync.Services
         /// <summary>Last interval handed to <see cref="Tick"/>; used to schedule the slot after a success.</summary>
         private double _intervalSeconds = 15 * 60.0;
 
+        private IReadOnlyList<LocationResult> _candidates = new List<LocationResult>();
+        private int _candidatesVersion;
+        private bool _searchInProgress;
+
+        private int _timeShiftHours;
+
         private int _disposed;
 
         public WeatherCoordinator(ILocationService locationService, IWeatherService weatherService, ILog log)
@@ -107,6 +114,49 @@ namespace RealWeatherSync.Services
         }
 
         /// <summary>
+        /// How far the weather reading is shifted from "now", in hours. Only the reading moves;
+        /// the game clock is never touched.
+        /// </summary>
+        public int TimeShiftHours
+        {
+            get { lock (_gate) { return _timeShiftHours; } }
+            set
+            {
+                lock (_gate)
+                {
+                    if (_timeShiftHours == value)
+                    {
+                        return;
+                    }
+
+                    _timeShiftHours = value;
+                    // The stored reading is for the old offset; fetch again promptly.
+                    _nextAttemptSeconds = -1.0;
+                }
+            }
+        }
+
+        /// <summary>Candidates from the last <see cref="RequestSearch"/>, best ranked first.</summary>
+        public IReadOnlyList<LocationResult> Candidates
+        {
+            get { lock (_gate) { return _candidates; } }
+        }
+
+        /// <summary>
+        /// Increments whenever the candidate list changes. Wired to the options page through
+        /// SettingsUIValueVersion so the results dropdown refreshes without reopening the page.
+        /// </summary>
+        public int CandidatesVersion
+        {
+            get { lock (_gate) { return _candidatesVersion; } }
+        }
+
+        public bool SearchInProgress
+        {
+            get { lock (_gate) { return _searchInProgress; } }
+        }
+
+        /// <summary>
         /// Restores a location that was persisted in the settings, without issuing a
         /// geocoding request.
         /// </summary>
@@ -150,6 +200,117 @@ namespace RealWeatherSync.Services
             Log("City resolution started for \"" + trimmed + "\"");
             StatusReport.Set(StatusKind.ResolvingLocation);
             Enqueue(token => ResolveThenRefreshAsync(trimmed, token), true);
+        }
+
+        /// <summary>
+        /// Player pressed "Search". Fills <see cref="Candidates"/> so they can pick the right city
+        /// instead of trusting a single guess. Does not change the active location.
+        /// </summary>
+        public void RequestSearch(string query)
+        {
+            var trimmed = query == null ? string.Empty : query.Trim();
+
+            if (trimmed.Length == 0)
+            {
+                SetCandidates(new List<LocationResult>());
+                StatusReport.Set(StatusKind.CityNotConfigured,
+                    Translation.Get(LocaleKeys.ErrorEmptyCity, "Enter a city name first"));
+                return;
+            }
+
+            lock (_gate)
+            {
+                _searchInProgress = true;
+            }
+
+            Log("City search started for \"" + trimmed + "\"");
+            StatusReport.Set(StatusKind.ResolvingLocation);
+            Enqueue(token => SearchAsync(trimmed, token), true);
+        }
+
+        /// <summary>
+        /// Player picked one of the <see cref="Candidates"/>. Becomes the active location and
+        /// triggers an immediate refresh.
+        /// </summary>
+        public void ApplyCandidate(LocationResult location)
+        {
+            if (location == null || !location.HasValidCoordinates)
+            {
+                return;
+            }
+
+            lock (_gate)
+            {
+                _location = location;
+                _locationSequence++;
+                _consecutiveFailures = 0;
+                _nextAttemptSeconds = -1.0;
+            }
+
+            StatusReport.SetLocation(location.DisplayName, location.Latitude, location.Longitude);
+            Log("City selected from search results: " + location.DisplayName + " (" + Format(location) + ")");
+
+            Enqueue(token => RefreshAsync(location, token), true);
+        }
+
+        private async Task SearchAsync(string query, CancellationToken token)
+        {
+            try
+            {
+                var results = await _locationService
+                    .SearchLocationsAsync(query, 10, token)
+                    .ConfigureAwait(false);
+
+                SetCandidates(results);
+
+                if (results.Count == 0)
+                {
+                    LogWarn("No geocoding result for \"" + query + "\".");
+                    StatusReport.Set(StatusKind.ErrorResolvingCity,
+                        Translation.Get(LocaleKeys.ErrorCityNotFound, "No matching city found"));
+                    return;
+                }
+
+                Log("City search returned " + results.Count + " candidate(s) for \"" + query + "\".");
+                StatusReport.Set(StatusKind.CandidatesReady,
+                    results.Count.ToString(System.Globalization.CultureInfo.CurrentCulture));
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                Log("City search for \"" + query + "\" was cancelled.");
+            }
+            catch (OperationCanceledException)
+            {
+                LogWarn("City search for \"" + query + "\" timed out.");
+                StatusReport.Set(StatusKind.ErrorResolvingCity,
+                    Translation.Get(LocaleKeys.ErrorNetwork, "Could not reach Open-Meteo"));
+            }
+            catch (WeatherProviderException e)
+            {
+                LogWarn("City search failed: " + e.Message);
+                StatusReport.Set(StatusKind.ErrorResolvingCity, DescribeProviderError(e));
+            }
+            catch (Exception e)
+            {
+                LogError("Unexpected error while searching \"" + query + "\"", e);
+                StatusReport.Set(StatusKind.ErrorResolvingCity, e.Message);
+            }
+            finally
+            {
+                lock (_gate)
+                {
+                    _searchInProgress = false;
+                }
+            }
+        }
+
+        private void SetCandidates(IReadOnlyList<LocationResult> results)
+        {
+            lock (_gate)
+            {
+                _candidates = results ?? new List<LocationResult>();
+                _candidatesVersion++;
+            }
         }
 
         /// <summary>Player pressed "Refresh Weather Now".</summary>
@@ -358,14 +519,21 @@ namespace RealWeatherSync.Services
                 return;
             }
 
+            int shift;
+            lock (_gate)
+            {
+                shift = _timeShiftHours;
+            }
+
             StatusReport.Set(StatusKind.Refreshing);
-            Log("Weather refresh started for " + location.DisplayName + ".");
+            Log("Weather refresh started for " + location.DisplayName +
+                (shift == 0 ? "." : " (time shift " + shift.ToString(System.Globalization.CultureInfo.InvariantCulture) + " h)."));
 
             WeatherSnapshot snapshot;
             try
             {
                 snapshot = await _weatherService
-                    .GetCurrentWeatherAsync(location.Latitude, location.Longitude, token)
+                    .GetWeatherAsync(location.Latitude, location.Longitude, shift, token)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)

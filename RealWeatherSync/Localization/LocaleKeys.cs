@@ -14,6 +14,7 @@ namespace RealWeatherSync.Localization
         public const string StatusResolvingLocation = Prefix + "Status.ResolvingLocation";
         public const string StatusRefreshing = Prefix + "Status.Refreshing";
         public const string StatusConnected = Prefix + "Status.Connected";
+        public const string StatusCandidatesReady = Prefix + "Status.CandidatesReady";
         public const string StatusOffline = Prefix + "Status.Offline";
         public const string StatusErrorResolvingCity = Prefix + "Status.ErrorResolvingCity";
         public const string StatusIncompatibleMod = Prefix + "Status.IncompatibleMod";
@@ -35,6 +36,14 @@ namespace RealWeatherSync.Localization
         public const string WeatherCode = Prefix + "Weather.Code";
         public const string WeatherVisibility = Prefix + "Weather.Visibility";
         public const string WeatherFog = Prefix + "Weather.Fog";
+        public const string WeatherConditions = Prefix + "Weather.Conditions";
+        public const string WeatherTimeShiftPast = Prefix + "Weather.TimeShiftPast";
+        public const string WeatherTimeShiftFuture = Prefix + "Weather.TimeShiftFuture";
+        public const string WeatherOppositeDay = Prefix + "Weather.OppositeDay";
+
+        public const string SearchNoResults = Prefix + "Search.NoResults";
+        public const string SearchPickOne = Prefix + "Search.PickOne";
+        public const string FavouritesEmpty = Prefix + "Favourites.Empty";
 
         public const string OverridesActive = Prefix + "Overrides.Active";
         public const string OverridesInactive = Prefix + "Overrides.Inactive";
