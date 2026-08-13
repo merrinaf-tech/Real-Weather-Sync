@@ -3,7 +3,7 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [1.1.0] - 2026-08-07
+## [1.1.0] - 2026-08-13
 
 Usability release. The weather mapping itself is unchanged.
 
