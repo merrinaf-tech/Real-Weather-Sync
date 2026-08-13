@@ -30,13 +30,22 @@ namespace RealWeatherSync.Services
         private const string CurrentVariables =
             "temperature_2m,relative_humidity_2m,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover";
 
-        /// <summary>How many geocoding candidates to ask for before filtering by country / region.</summary>
-        private const int GeocodingCandidateCount = 10;
+        /// <summary>
+        /// Hourly series. Visibility is always needed (Open-Meteo has no "current" visibility);
+        /// the rest are only read when a time shift moves the reading off the current hour.
+        /// </summary>
+        private const string HourlyVariables =
+            "visibility,temperature_2m,relative_humidity_2m,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover";
+
+        /// <summary>Largest shift the mod offers in either direction; keeps the request to 3 days.</summary>
+        public const int MaxTimeShiftHours = 24;
+
+        private const int DefaultCandidateCount = 10;
 
         private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(15);
 
         /// <summary>Responses are small; anything larger than this is not something we should be parsing.</summary>
-        private const int MaxResponseBytes = 512 * 1024;
+        private const int MaxResponseBytes = 1024 * 1024;
 
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerSettings _jsonSettings;
@@ -73,17 +82,32 @@ namespace RealWeatherSync.Services
             };
         }
 
+        // ------------------------------------------------------------------
+        // Geocoding
+        // ------------------------------------------------------------------
+
         public async Task<LocationResult> ResolveLocationAsync(string query, CancellationToken cancellationToken)
         {
+            var candidates = await SearchLocationsAsync(query, DefaultCandidateCount, cancellationToken)
+                .ConfigureAwait(false);
+
+            return candidates.Count > 0 ? candidates[0] : null;
+        }
+
+        public async Task<IReadOnlyList<LocationResult>> SearchLocationsAsync(string query, int maxResults,
+            CancellationToken cancellationToken)
+        {
+            var empty = new List<LocationResult>();
+
             if (string.IsNullOrEmpty(query))
             {
-                return null;
+                return empty;
             }
 
             var trimmed = query.Trim();
             if (trimmed.Length == 0)
             {
-                return null;
+                return empty;
             }
 
             string cityPart;
@@ -92,12 +116,14 @@ namespace RealWeatherSync.Services
 
             if (cityPart.Length == 0)
             {
-                return null;
+                return empty;
             }
+
+            var count = maxResults < 1 ? 1 : (maxResults > 100 ? 100 : maxResults);
 
             var url = new StringBuilder(GeocodingEndpoint)
                 .Append("?name=").Append(Uri.EscapeDataString(cityPart))
-                .Append("&count=").Append(GeocodingCandidateCount.ToString(CultureInfo.InvariantCulture))
+                .Append("&count=").Append(count.ToString(CultureInfo.InvariantCulture))
                 .Append("&language=en&format=json")
                 .ToString();
 
@@ -115,7 +141,7 @@ namespace RealWeatherSync.Services
 
             if (response == null || response.Results == null || response.Results.Count == 0)
             {
-                return null;
+                return empty;
             }
 
             if (response.Error.HasValue && response.Error.Value)
@@ -124,45 +150,62 @@ namespace RealWeatherSync.Services
                                                    (response.Reason ?? "unknown reason"));
             }
 
-            var chosen = SelectBestResult(response.Results, qualifier);
-            if (chosen == null)
+            var matches = new List<LocationResult>();
+            foreach (var candidate in response.Results)
             {
-                return null;
+                if (candidate == null || !candidate.Latitude.HasValue || !candidate.Longitude.HasValue)
+                {
+                    continue;
+                }
+
+                // With a "City, Country" style query, drop candidates that do not match the
+                // qualifier rather than silently offering a city on another continent.
+                if (!string.IsNullOrEmpty(qualifier) && !MatchesQualifier(candidate, qualifier))
+                {
+                    continue;
+                }
+
+                var result = new LocationResult(
+                    trimmed,
+                    candidate.Name,
+                    candidate.Admin1,
+                    candidate.Country,
+                    candidate.CountryCode,
+                    candidate.Timezone,
+                    candidate.Latitude.Value,
+                    candidate.Longitude.Value);
+
+                if (result.HasValidCoordinates)
+                {
+                    matches.Add(result);
+                }
             }
 
-            if (!chosen.Latitude.HasValue || !chosen.Longitude.HasValue)
-            {
-                return null;
-            }
-
-            var result = new LocationResult(
-                trimmed,
-                chosen.Name,
-                chosen.Admin1,
-                chosen.Country,
-                chosen.CountryCode,
-                chosen.Timezone,
-                chosen.Latitude.Value,
-                chosen.Longitude.Value);
-
-            return result.HasValidCoordinates ? result : null;
+            return matches;
         }
 
-        public async Task<WeatherSnapshot> GetCurrentWeatherAsync(double latitude, double longitude,
+        // ------------------------------------------------------------------
+        // Weather
+        // ------------------------------------------------------------------
+
+        public async Task<WeatherSnapshot> GetWeatherAsync(double latitude, double longitude, int timeShiftHours,
             CancellationToken cancellationToken)
         {
+            var shift = ClampShift(timeShiftHours);
             var ci = CultureInfo.InvariantCulture;
 
             var url = new StringBuilder(ForecastEndpoint)
                 .Append("?latitude=").Append(latitude.ToString("0.#####", ci))
                 .Append("&longitude=").Append(longitude.ToString("0.#####", ci))
+                // "current" is always requested: at shift 0 it is the reading we use, and at any
+                // shift it gives us the location's local timestamp to index the hourly series
+                // from, so no timezone arithmetic happens on our side.
                 .Append("&current=").Append(CurrentVariables)
-                // Visibility is an hourly-only variable in Open-Meteo. Asking for one
-                // hour either side of now gives us a value to line up with current.time.
-                .Append("&hourly=visibility&past_hours=1&forecast_hours=1")
+                .Append("&hourly=").Append(HourlyVariables)
+                .Append("&past_days=1&forecast_days=2")
                 .Append("&temperature_unit=celsius&precipitation_unit=mm&wind_speed_unit=kmh")
-                // timezone=auto only aligns the timestamps we read back with the
-                // location. The game clock, date and season are never touched.
+                // timezone=auto only aligns the timestamps we read back with the location. The
+                // game clock, date and season are never touched.
                 .Append("&timezone=auto")
                 .ToString();
 
@@ -195,12 +238,102 @@ namespace RealWeatherSync.Services
                 throw new WeatherProviderException("Weather response contained no current conditions.");
             }
 
+            var currentHourIndex = FindHourIndex(response.Hourly, current.Time);
+
+            var snapshot = shift == 0
+                ? BuildFromCurrent(current, response.Hourly, currentHourIndex)
+                : BuildFromHourly(response.Hourly, currentHourIndex, shift, current);
+
+            // Costs nothing extra: the hourly series is already in this response.
+            snapshot.Timeline = BuildTimeline(response.Hourly, current.Time);
+            return snapshot;
+        }
+
+        /// <summary>
+        /// Turns the hourly arrays into a <see cref="WeatherTimeline"/>. Returns null when the
+        /// series is unusable; callers treat that as "clock-following mode unavailable".
+        /// </summary>
+        private static WeatherTimeline BuildTimeline(OpenMeteoHourly hourly, string currentTime)
+        {
+            if (hourly == null || hourly.Time == null || hourly.Time.Count == 0)
+            {
+                return null;
+            }
+
+            DateTime localNow;
+            if (!TryParseLocal(currentTime, out localNow))
+            {
+                return null;
+            }
+
+            var samples = new List<HourlySample>(hourly.Time.Count);
+            for (var i = 0; i < hourly.Time.Count; i++)
+            {
+                DateTime stamp;
+                if (!TryParseLocal(hourly.Time[i], out stamp))
+                {
+                    continue;
+                }
+
+                var temperature = ReadNullable(hourly.Temperature2m, i);
+                if (!temperature.HasValue)
+                {
+                    // A gap in the series is better skipped than filled with zeroes.
+                    continue;
+                }
+
+                var code = ReadNullableInt(hourly.WeatherCode, i);
+                var isDay = ReadNullableInt(hourly.IsDay, i);
+
+                samples.Add(new HourlySample
+                {
+                    LocalTime = stamp,
+                    Weather = new WeatherSnapshot
+                    {
+                        ReceivedUtc = DateTime.UtcNow,
+                        ObservationTimeLocal = hourly.Time[i],
+                        TemperatureCelsius = temperature.Value,
+                        CloudCoverPercent = ReadOrZero(hourly.CloudCover, i),
+                        PrecipitationMm = ReadOrZero(hourly.Precipitation, i),
+                        RainMm = ReadOrZero(hourly.Rain, i),
+                        ShowersMm = ReadOrZero(hourly.Showers, i),
+                        SnowfallCm = ReadOrZero(hourly.Snowfall, i),
+                        RelativeHumidityPercent = ReadOrZero(hourly.RelativeHumidity2m, i),
+                        WeatherCode = code.HasValue ? code.Value : 0,
+                        IsDay = isDay.HasValue && isDay.Value != 0,
+                        VisibilityMeters = ReadNullable(hourly.Visibility, i)
+                    }
+                });
+            }
+
+            return samples.Count >= 2 ? new WeatherTimeline(samples, localNow) : null;
+        }
+
+        /// <summary>Parses Open-Meteo's "yyyy-MM-ddTHH:mm" local timestamps.</summary>
+        private static bool TryParseLocal(string value, out DateTime result)
+        {
+            return DateTime.TryParse(value, CultureInfo.InvariantCulture,
+                DateTimeStyles.NoCurrentDateDefault, out result) && result != default(DateTime);
+        }
+
+        private static int ClampShift(int hours)
+        {
+            if (hours > MaxTimeShiftHours)
+            {
+                return MaxTimeShiftHours;
+            }
+
+            return hours < -MaxTimeShiftHours ? -MaxTimeShiftHours : hours;
+        }
+
+        private static WeatherSnapshot BuildFromCurrent(OpenMeteoCurrent current, OpenMeteoHourly hourly, int hourIndex)
+        {
             if (!current.Temperature2m.HasValue)
             {
                 throw new WeatherProviderException("Weather response contained no temperature.");
             }
 
-            var snapshot = new WeatherSnapshot
+            return new WeatherSnapshot
             {
                 ReceivedUtc = DateTime.UtcNow,
                 ObservationTimeLocal = current.Time ?? string.Empty,
@@ -213,65 +346,96 @@ namespace RealWeatherSync.Services
                 RelativeHumidityPercent = Sanitise(current.RelativeHumidity2m, 0f),
                 WeatherCode = current.WeatherCode.HasValue ? current.WeatherCode.Value : 0,
                 IsDay = current.IsDay.HasValue && current.IsDay.Value != 0,
-                VisibilityMeters = ExtractVisibility(response.Hourly, current.Time)
+                VisibilityMeters = ReadNullable(hourly == null ? null : hourly.Visibility, hourIndex),
+                TimeShiftHours = 0
             };
-
-            return snapshot;
         }
 
         /// <summary>
-        /// Picks the hourly visibility sample whose timestamp matches the current
-        /// observation. Returns null rather than guessing when nothing lines up.
+        /// Reads the hourly sample <paramref name="shift"/> hours away from the location's current
+        /// hour. Falls back to the current conditions when the series cannot be indexed, so a
+        /// shifted reading never degrades into zeroes.
         /// </summary>
-        private static float? ExtractVisibility(OpenMeteoHourly hourly, string currentTime)
+        private static WeatherSnapshot BuildFromHourly(OpenMeteoHourly hourly, int currentHourIndex, int shift,
+            OpenMeteoCurrent current)
         {
-            if (hourly == null || hourly.Time == null || hourly.Visibility == null)
+            if (hourly == null || hourly.Time == null || currentHourIndex < 0)
             {
-                return null;
+                return BuildFromCurrent(current, hourly, currentHourIndex);
             }
 
-            var count = Math.Min(hourly.Time.Count, hourly.Visibility.Count);
-            if (count == 0)
+            var index = currentHourIndex + shift;
+            if (index < 0 || index >= hourly.Time.Count)
             {
-                return null;
+                throw new WeatherProviderException(
+                    "The requested time shift falls outside the data Open-Meteo returned.");
             }
 
-            var index = -1;
-
-            if (!string.IsNullOrEmpty(currentTime) && currentTime.Length >= 13)
+            var temperature = ReadNullable(hourly.Temperature2m, index);
+            if (!temperature.HasValue)
             {
-                // Both series use "yyyy-MM-ddTHH:mm" in the same (location local) zone.
-                var currentHour = currentTime.Substring(0, 13);
-                for (var i = 0; i < count; i++)
+                throw new WeatherProviderException("The shifted hour contained no temperature.");
+            }
+
+            var code = ReadNullableInt(hourly.WeatherCode, index);
+            var isDay = ReadNullableInt(hourly.IsDay, index);
+
+            return new WeatherSnapshot
+            {
+                ReceivedUtc = DateTime.UtcNow,
+                ObservationTimeLocal = hourly.Time[index] ?? string.Empty,
+                TemperatureCelsius = temperature.Value,
+                CloudCoverPercent = ReadOrZero(hourly.CloudCover, index),
+                PrecipitationMm = ReadOrZero(hourly.Precipitation, index),
+                RainMm = ReadOrZero(hourly.Rain, index),
+                ShowersMm = ReadOrZero(hourly.Showers, index),
+                SnowfallCm = ReadOrZero(hourly.Snowfall, index),
+                RelativeHumidityPercent = ReadOrZero(hourly.RelativeHumidity2m, index),
+                WeatherCode = code.HasValue ? code.Value : 0,
+                IsDay = isDay.HasValue && isDay.Value != 0,
+                VisibilityMeters = ReadNullable(hourly.Visibility, index),
+                TimeShiftHours = shift
+            };
+        }
+
+        /// <summary>
+        /// Index of the hourly sample matching the location's current local hour.
+        /// Both series use "yyyy-MM-ddTHH:mm" in the same zone, so a prefix compare is enough.
+        /// </summary>
+        private static int FindHourIndex(OpenMeteoHourly hourly, string currentTime)
+        {
+            if (hourly == null || hourly.Time == null || hourly.Time.Count == 0)
+            {
+                return -1;
+            }
+
+            if (string.IsNullOrEmpty(currentTime) || currentTime.Length < 13)
+            {
+                return -1;
+            }
+
+            var currentHour = currentTime.Substring(0, 13);
+            for (var i = 0; i < hourly.Time.Count; i++)
+            {
+                var t = hourly.Time[i];
+                if (t != null && t.Length >= 13 &&
+                    string.Equals(t.Substring(0, 13), currentHour, StringComparison.Ordinal))
                 {
-                    var t = hourly.Time[i];
-                    if (t != null && t.Length >= 13 && string.Equals(t.Substring(0, 13), currentHour, StringComparison.Ordinal))
-                    {
-                        index = i;
-                        break;
-                    }
+                    return i;
                 }
             }
 
-            if (index < 0)
-            {
-                // Fall back to the most recent sample that actually has a value.
-                for (var i = count - 1; i >= 0; i--)
-                {
-                    if (hourly.Visibility[i].HasValue)
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-            }
+            return -1;
+        }
 
-            if (index < 0)
+        private static float? ReadNullable(List<float?> series, int index)
+        {
+            if (series == null || index < 0 || index >= series.Count)
             {
                 return null;
             }
 
-            var value = hourly.Visibility[index];
+            var value = series[index];
             if (!value.HasValue || float.IsNaN(value.Value) || float.IsInfinity(value.Value) || value.Value < 0f)
             {
                 return null;
@@ -279,6 +443,26 @@ namespace RealWeatherSync.Services
 
             return value.Value;
         }
+
+        private static int? ReadNullableInt(List<int?> series, int index)
+        {
+            if (series == null || index < 0 || index >= series.Count)
+            {
+                return null;
+            }
+
+            return series[index];
+        }
+
+        private static float ReadOrZero(List<float?> series, int index)
+        {
+            var value = ReadNullable(series, index);
+            return value.HasValue ? value.Value : 0f;
+        }
+
+        // ------------------------------------------------------------------
+        // Query parsing
+        // ------------------------------------------------------------------
 
         /// <summary>
         /// Splits "Milazzo, Italy" into the name Open-Meteo can search for and the
@@ -298,11 +482,18 @@ namespace RealWeatherSync.Services
             qualifier = query.Substring(comma + 1).Trim();
         }
 
+        internal static bool MatchesQualifier(OpenMeteoGeocodingResult candidate, string qualifier)
+        {
+            return Matches(candidate.Country, qualifier)
+                   || Matches(candidate.CountryCode, qualifier)
+                   || Matches(candidate.Admin1, qualifier)
+                   || Matches(candidate.Admin2, qualifier);
+        }
+
         /// <summary>
         /// Open-Meteo returns candidates already ranked by relevance. With no
         /// qualifier we take the top one; with a qualifier we take the best ranked
-        /// candidate whose country, country code or region matches, and report
-        /// "not found" rather than silently returning a city on another continent.
+        /// candidate whose country, country code or region matches.
         /// </summary>
         internal static OpenMeteoGeocodingResult SelectBestResult(List<OpenMeteoGeocodingResult> results, string qualifier)
         {
@@ -318,15 +509,7 @@ namespace RealWeatherSync.Services
 
             foreach (var candidate in results)
             {
-                if (candidate == null)
-                {
-                    continue;
-                }
-
-                if (Matches(candidate.Country, qualifier)
-                    || Matches(candidate.CountryCode, qualifier)
-                    || Matches(candidate.Admin1, qualifier)
-                    || Matches(candidate.Admin2, qualifier))
+                if (candidate != null && MatchesQualifier(candidate, qualifier))
                 {
                     return candidate;
                 }
@@ -349,6 +532,10 @@ namespace RealWeatherSync.Services
 
             return value.IndexOf(qualifier, StringComparison.OrdinalIgnoreCase) >= 0;
         }
+
+        // ------------------------------------------------------------------
+        // Transport
+        // ------------------------------------------------------------------
 
         private async Task<string> GetStringAsync(string url, CancellationToken cancellationToken)
         {

@@ -66,13 +66,46 @@ namespace RealWeatherSync.Models
         public float? CloudCover { get; set; }
     }
 
+    /// <summary>
+    /// Hourly series. Visibility is always requested because Open-Meteo exposes it as an
+    /// hourly-only variable; the remaining series are only populated when a time shift is in
+    /// effect and the reading has to come from a past or forecast hour.
+    /// </summary>
     public sealed class OpenMeteoHourly
     {
         [JsonProperty("time")]
         public List<string> Time { get; set; }
 
-        /// <summary>Metres. Open-Meteo exposes visibility as an hourly variable only.</summary>
+        /// <summary>Metres.</summary>
         [JsonProperty("visibility")]
         public List<float?> Visibility { get; set; }
+
+        [JsonProperty("temperature_2m")]
+        public List<float?> Temperature2m { get; set; }
+
+        [JsonProperty("relative_humidity_2m")]
+        public List<float?> RelativeHumidity2m { get; set; }
+
+        [JsonProperty("precipitation")]
+        public List<float?> Precipitation { get; set; }
+
+        [JsonProperty("rain")]
+        public List<float?> Rain { get; set; }
+
+        [JsonProperty("showers")]
+        public List<float?> Showers { get; set; }
+
+        /// <summary>Centimetres of fresh snow, not water equivalent.</summary>
+        [JsonProperty("snowfall")]
+        public List<float?> Snowfall { get; set; }
+
+        [JsonProperty("weather_code")]
+        public List<int?> WeatherCode { get; set; }
+
+        [JsonProperty("cloud_cover")]
+        public List<float?> CloudCover { get; set; }
+
+        [JsonProperty("is_day")]
+        public List<int?> IsDay { get; set; }
     }
 }

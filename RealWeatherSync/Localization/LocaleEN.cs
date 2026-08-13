@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Colossal;
+using RealWeatherSync.Mapping;
 using RealWeatherSync.Settings;
 
 namespace RealWeatherSync.Localization
@@ -23,16 +24,18 @@ namespace RealWeatherSync.Localization
         public IEnumerable<KeyValuePair<string, string>> ReadEntries(IList<IDictionaryEntryError> errors,
             Dictionary<string, int> indexCounts)
         {
-            return new Dictionary<string, string>
+            var entries = new Dictionary<string, string>
             {
                 { _settings.GetSettingsLocaleID(), Mod.Name },
 
                 { _settings.GetOptionTabLocaleID(RealWeatherSettings.MainSection), "Main" },
 
                 { _settings.GetOptionGroupLocaleID(RealWeatherSettings.GeneralGroup), "General" },
+                { _settings.GetOptionGroupLocaleID(RealWeatherSettings.SearchGroup), "City" },
                 { _settings.GetOptionGroupLocaleID(RealWeatherSettings.ActionsGroup), "Actions" },
                 { _settings.GetOptionGroupLocaleID(RealWeatherSettings.StatusGroup), "Status" },
                 { _settings.GetOptionGroupLocaleID(RealWeatherSettings.AdvancedGroup), "Advanced" },
+                { _settings.GetOptionGroupLocaleID(RealWeatherSettings.SillyGroup), "Options nobody asked for" },
                 { _settings.GetOptionGroupLocaleID(RealWeatherSettings.AboutGroup), "About" },
 
                 // -- General ------------------------------------------------
@@ -47,14 +50,16 @@ namespace RealWeatherSync.Localization
                     "Turning this off immediately hands the weather back to the game."
                 },
                 {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.CityQuery)),
-                    "City"
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.FollowGameClock)),
+                    "Follow the in-game clock"
                 },
                 {
-                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.CityQuery)),
-                    "The real city to copy the weather from. Examples: Lyon - Lyon, France - Milazzo, Italy - " +
-                    "New York, United States. Add a country or a region after a comma if the name is ambiguous. " +
-                    "Press Apply City afterwards."
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.FollowGameClock)),
+                    "Instead of one frozen reading, walk through the city's last 24 hours of real weather " +
+                    "using the in-game hour. If it is 15:00 in your city, you get the real weather that the " +
+                    "chosen city had at its most recent 15:00 - so the weather changes as your day goes by. " +
+                    "The in-game clock is only read, never changed: the time, date and season stay exactly " +
+                    "as the game set them. Overrides the manual time shift while it is on."
                 },
                 {
                     _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SmoothTransitions)),
@@ -62,8 +67,17 @@ namespace RealWeatherSync.Localization
                 },
                 {
                     _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.SmoothTransitions)),
-                    "Fade gradually to each new weather reading over about two minutes of real time instead of " +
-                    "switching instantly. The fade uses real time, so it is unaffected by the simulation speed."
+                    "Fade gradually to each new weather reading instead of switching instantly. " +
+                    "The fade uses real time, so it is unaffected by pausing or the simulation speed."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.TransitionSeconds)),
+                    "Transition length (seconds)"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.TransitionSeconds)),
+                    "How long a fade between two weather readings takes, in real seconds. " +
+                    "Only used when smooth transitions are enabled."
                 },
                 {
                     _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.UpdateInterval)),
@@ -74,17 +88,45 @@ namespace RealWeatherSync.Localization
                     "How often to ask Open-Meteo for fresh conditions. Open-Meteo updates its data roughly " +
                     "every 15 minutes, so shorter intervals gain little."
                 },
+                { _settings.GetEnumValueLocaleID(UpdateIntervalOption.FifteenMinutes), "15 minutes" },
+                { _settings.GetEnumValueLocaleID(UpdateIntervalOption.ThirtyMinutes), "30 minutes" },
+                { _settings.GetEnumValueLocaleID(UpdateIntervalOption.SixtyMinutes), "60 minutes" },
+
+                // -- City ---------------------------------------------------
                 {
-                    _settings.GetEnumValueLocaleID(UpdateIntervalOption.FifteenMinutes),
-                    "15 minutes"
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.CityQuery)),
+                    "City"
                 },
                 {
-                    _settings.GetEnumValueLocaleID(UpdateIntervalOption.ThirtyMinutes),
-                    "30 minutes"
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.CityQuery)),
+                    "The real city to copy the weather from. Examples: Lyon - Lyon, France - Milazzo, Italy - " +
+                    "New York, United States. Add a country or a region after a comma to narrow it down."
                 },
                 {
-                    _settings.GetEnumValueLocaleID(UpdateIntervalOption.SixtyMinutes),
-                    "60 minutes"
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SearchCity)),
+                    "Search"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.SearchCity)),
+                    "Look the name up and list every matching city below, so you can confirm the right one " +
+                    "instead of trusting a single guess."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SelectedSearchResult)),
+                    "Search results"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.SelectedSearchResult)),
+                    "Cities matching your search, best match first, with their region, country and coordinates. " +
+                    "Picking one applies it straight away."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SelectedFavourite)),
+                    "Recent cities"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.SelectedFavourite)),
+                    "Cities you have used before. Picking one switches to it immediately, with no lookup."
                 },
 
                 // -- Actions ------------------------------------------------
@@ -94,7 +136,7 @@ namespace RealWeatherSync.Localization
                 },
                 {
                     _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.ApplyCity)),
-                    "Look the city up, store its coordinates, and fetch its weather straight away. " +
+                    "Use the best match for the name typed above, without picking from the list. " +
                     "If the city cannot be found, the previously resolved location is kept."
                 },
                 {
@@ -106,13 +148,22 @@ namespace RealWeatherSync.Localization
                     "Fetch the current conditions immediately instead of waiting for the next update."
                 },
                 {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ApplyImmediately)),
+                    "Apply Immediately"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.ApplyImmediately)),
+                    "Refresh and jump straight to the new weather, skipping the fade. Also cuts short a " +
+                    "transition that is already running."
+                },
+                {
                     _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ResetToGameWeather)),
                     "Reset to Game Weather"
                 },
                 {
                     _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.ResetToGameWeather)),
                     "Release every climate override and let the game control the weather again. " +
-                    "Real weather resumes when you press Apply City or Refresh Weather Now."
+                    "Real weather resumes when you apply a city or force a refresh."
                 },
                 {
                     _settings.GetOptionWarningLocaleID(nameof(RealWeatherSettings.ResetToGameWeather)),
@@ -120,22 +171,10 @@ namespace RealWeatherSync.Localization
                 },
 
                 // -- Status -------------------------------------------------
-                {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.StatusText)),
-                    "Status"
-                },
-                {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ResolvedLocationText)),
-                    "Resolved location"
-                },
-                {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.LastUpdateText)),
-                    "Last update"
-                },
-                {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.CurrentWeatherText)),
-                    "Current weather"
-                },
+                { _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.StatusText)), "Status" },
+                { _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ResolvedLocationText)), "Resolved location" },
+                { _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.LastUpdateText)), "Last update" },
+                { _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.CurrentWeatherText)), "Current weather" },
 
                 // -- Advanced -----------------------------------------------
                 {
@@ -169,11 +208,29 @@ namespace RealWeatherSync.Localization
                     "the other mod is not overriding the weather."
                 },
 
-                // -- About --------------------------------------------------
+                // -- Options nobody asked for -------------------------------
                 {
-                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.AboutText)),
-                    "About"
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.TimeShiftHours)),
+                    "Time shift (hours)"
                 },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.TimeShiftHours)),
+                    "Read the weather from a different hour: negative for the past, positive for the forecast. " +
+                    "At -24 your city lives yesterday's weather; at +24 it gets tomorrow's, a day early. " +
+                    "Only the weather reading moves - the game clock, date and season are untouched."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.OppositeDay)),
+                    "Opposite day"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.OppositeDay)),
+                    "Mirror the weather. Warm becomes cold, clear becomes overcast, dry becomes soaking. " +
+                    "Fog is left alone, because permanent fog hides the city and stops being funny immediately."
+                },
+
+                // -- About --------------------------------------------------
+                { _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.AboutText)), "About" },
                 {
                     LocaleKeys.AboutText,
                     "Real Weather Sync " + Mod.Version + Environment.NewLine +
@@ -187,6 +244,7 @@ namespace RealWeatherSync.Localization
                 { LocaleKeys.StatusCityNotConfigured, "City not configured" },
                 { LocaleKeys.StatusResolvingLocation, "Resolving location" },
                 { LocaleKeys.StatusRefreshing, "Refreshing weather" },
+                { LocaleKeys.StatusCandidatesReady, "Pick a city from the search results" },
                 { LocaleKeys.StatusConnected, "Connected" },
                 { LocaleKeys.StatusOffline, "Offline - using last valid weather" },
                 { LocaleKeys.StatusErrorResolvingCity, "Error resolving city" },
@@ -209,6 +267,14 @@ namespace RealWeatherSync.Localization
                 { LocaleKeys.WeatherCode, "WMO code" },
                 { LocaleKeys.WeatherVisibility, "visibility" },
                 { LocaleKeys.WeatherFog, "fog" },
+                { LocaleKeys.WeatherConditions, "Conditions" },
+                { LocaleKeys.WeatherTimeShiftPast, "{0} h in the past" },
+                { LocaleKeys.WeatherTimeShiftFuture, "{0} h ahead - forecast" },
+                { LocaleKeys.WeatherOppositeDay, "Opposite day" },
+
+                { LocaleKeys.SearchNoResults, "No results - press Search" },
+                { LocaleKeys.SearchPickOne, "Select a city..." },
+                { LocaleKeys.FavouritesEmpty, "No recent cities yet" },
 
                 { LocaleKeys.OverridesActive, "Climate overrides are active." },
                 { LocaleKeys.OverridesInactive, "Climate overrides are not active." },
@@ -218,6 +284,14 @@ namespace RealWeatherSync.Localization
                 { LocaleKeys.ErrorNetwork, "Could not reach Open-Meteo" },
                 { LocaleKeys.ErrorRateLimited, "Open-Meteo is rate limiting requests" }
             };
+
+            // WMO condition names, from the single table in WeatherCodes.
+            foreach (var pair in WeatherCodes.All())
+            {
+                entries[pair.Key] = pair.Value;
+            }
+
+            return entries;
         }
 
         public void Unload()

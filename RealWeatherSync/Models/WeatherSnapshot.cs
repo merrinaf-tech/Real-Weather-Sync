@@ -46,6 +46,20 @@ namespace RealWeatherSync.Models
         /// <summary>Daylight flag reported by the provider. Recorded for diagnostics; never used to change the game clock.</summary>
         public bool IsDay { get; set; }
 
+        /// <summary>
+        /// Hours this reading is shifted from "now" at the location: negative for the past,
+        /// positive for a forecast, 0 for current conditions. Diagnostics only - shifting the
+        /// weather reading never shifts the game clock.
+        /// </summary>
+        public int TimeShiftHours { get; set; }
+
+        /// <summary>
+        /// The hourly series around this reading, when the provider supplied one. Used by the
+        /// "follow the in-game clock" mode to walk a real day hour by hour. Null is valid and
+        /// simply means that mode has nothing to work with.
+        /// </summary>
+        public WeatherTimeline Timeline { get; set; }
+
         public override string ToString()
         {
             var ci = CultureInfo.InvariantCulture;

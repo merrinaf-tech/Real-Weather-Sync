@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using RealWeatherSync.Models;
@@ -13,7 +14,7 @@ namespace RealWeatherSync.Services
     {
         /// <summary>
         /// Resolves <paramref name="query"/> ("Lyon", "Lyon, France",
-        /// "New York, United States", ...).
+        /// "New York, United States", ...) to the single best match.
         /// </summary>
         /// <returns>
         /// The best matching location, or <c>null</c> when nothing matched.
@@ -21,5 +22,13 @@ namespace RealWeatherSync.Services
         /// and protocol failures; "no result" is not an error.
         /// </returns>
         Task<LocationResult> ResolveLocationAsync(string query, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns every plausible match for <paramref name="query"/>, best ranked first, so the
+        /// player can pick the right one instead of trusting a single guess.
+        /// </summary>
+        /// <returns>An empty list when nothing matched; never <c>null</c>.</returns>
+        Task<IReadOnlyList<LocationResult>> SearchLocationsAsync(string query, int maxResults,
+            CancellationToken cancellationToken);
     }
 }

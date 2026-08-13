@@ -65,17 +65,28 @@ Everything lives on one options page, **Options -> Real Weather Sync**.
 | Setting | Meaning |
 |---|---|
 | **Enable Real Weather** | Master switch. Turning it off hands the weather straight back to the game. |
-| **City** | The real city to copy. `Lyon`, `Lyon, France`, `Milazzo, Italy`, `New York, United States`. |
-| **Smooth Weather Transitions** | Fade to each new reading over ~120 seconds of real time instead of snapping. |
+| **Follow the in-game clock** | Off by default. See [below](#following-the-in-game-clock). |
+| **Smooth Weather Transitions** | Fade to each new reading instead of snapping. |
+| **Transition length** | 0–600 seconds of real time. Default 120. Disabled when smoothing is off. |
 | **Update Interval** | 15 / 30 / 60 minutes. Default 15. |
+
+### City
+
+| Setting | Meaning |
+|---|---|
+| **City** | The real city to copy. `Lyon`, `Lyon, France`, `Milazzo, Italy`, `New York, United States`. |
+| **Search** | Looks the name up and lists every match below, so you can confirm the right one. |
+| **Search results** | Every matching city with its region, country and coordinates, best match first. Picking one applies it immediately. |
+| **Recent cities** | The last 10 cities you used. Picking one switches instantly, with no lookup. |
 
 ### Actions
 
 | Button | Meaning |
 |---|---|
-| **Apply City** | Geocode the text in *City*, store the coordinates, and fetch the weather immediately. |
+| **Apply City** | Use the best match for the typed name without picking from the list. |
 | **Refresh Weather Now** | Fetch current conditions without waiting for the next interval. Disabled until a city is resolved. |
-| **Reset to Game Weather** | Release all overrides and let the game drive the weather again. Real weather resumes on the next **Apply City** or **Refresh Weather Now**. |
+| **Apply Immediately** | Refresh and jump straight to the new weather, skipping the fade. Also cuts short a transition already running. |
+| **Reset to Game Weather** | Release all overrides and let the game drive the weather again. Real weather resumes on the next apply or refresh. |
 
 ### Status (read-only)
 
@@ -95,6 +106,37 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 | **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
+
+### Options nobody asked for
+
+Still purely cosmetic — these bend the *reading*, never the simulation.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| **Time shift** | 0 h | Read the weather from up to 24 hours in the past or the future. At −24 your city lives yesterday's weather; at +24 it gets tomorrow's forecast a day early. **The game clock, date and season are not affected** — only which weather reading is used. |
+| **Opposite day** | off | Mirror the weather: temperature reflected around 15 °C, cloudiness and precipitation inverted. Fog is deliberately left alone, because permanent fog hides the city and stops being funny within seconds. |
+
+### Following the in-game clock
+
+Normally the mod shows the city's weather **right now**: one reading, refreshed every 15–60
+minutes.
+
+With **Follow the in-game clock** enabled it instead walks the city's **last 24 hours** of real
+weather, using your in-game hour to choose which one:
+
+> It is 10:00 in the real world and 15:00 in your city → you get the weather the chosen city
+> actually had at its most recent 15:00, which was yesterday.
+> Your clock rolls on to 16:00 → you get that city's 16:00 weather. And so on.
+
+So a full in-game day replays a full real day of that city's weather, in order, instead of
+holding one frozen snapshot. Values are interpolated continuously between the two bracketing
+hours, so there are no steps and no fade is needed — the transition settings are ignored (and
+greyed out) while this mode is on, as is the manual time shift.
+
+**The in-game clock is only read, never written.** The time, date, season and day/night cycle
+stay exactly as the game set them — the mod just asks what time it is to decide which weather to
+show. This costs no extra network traffic: the hourly series already comes back with the request
+the mod was making anyway.
 
 ### The normal workflow
 

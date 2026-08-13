@@ -5,17 +5,22 @@ using RealWeatherSync.Models;
 namespace RealWeatherSync.Services
 {
     /// <summary>
-    /// Retrieves the current conditions for a pair of coordinates.
+    /// Retrieves conditions for a pair of coordinates.
     /// </summary>
     public interface IWeatherService
     {
         /// <summary>
-        /// Fetches the current weather at the given coordinates.
+        /// Fetches the conditions at the given coordinates.
         /// </summary>
+        /// <param name="timeShiftHours">
+        /// 0 for current conditions. Negative reads a past hour, positive reads a forecast hour.
+        /// This shifts only which weather reading is used - it never touches the game clock.
+        /// </param>
         /// <returns>A snapshot, never <c>null</c>.</returns>
         /// <exception cref="WeatherProviderException">
         /// Transport failure, HTTP error, rate limiting, or an unusable response body.
         /// </exception>
-        Task<WeatherSnapshot> GetCurrentWeatherAsync(double latitude, double longitude, CancellationToken cancellationToken);
+        Task<WeatherSnapshot> GetWeatherAsync(double latitude, double longitude, int timeShiftHours,
+            CancellationToken cancellationToken);
     }
 }

@@ -38,6 +38,21 @@ namespace RealWeatherSync.Systems
         private ClimateSystem _climateSystem;
         private ClimateOverrideController _controller;
 
+        /// <summary>
+        /// Read-only clock source for the "follow the in-game clock" mode. This system NEVER
+        /// writes to PlanetarySystem - not the time, not the date, not latitude or longitude.
+        /// It only asks what hour it currently is in game.
+        /// </summary>
+        private PlanetarySystem _planetarySystem;
+
+        private WeatherSnapshot _latestSnapshot;
+
+        // Cache so the mapper is not run twice per frame while the bracketing hours are unchanged.
+        private WeatherSnapshot _bracketBefore;
+        private WeatherSnapshot _bracketAfter;
+        private ClimateTarget _bracketBeforeTarget;
+        private ClimateTarget _bracketAfterTarget;
+
         private readonly Stopwatch _realTime = Stopwatch.StartNew();
 
         private bool _isGame;
@@ -60,6 +75,9 @@ namespace RealWeatherSync.Systems
         private double _lastWriteSeconds;
         private bool _loggedOverridesActive;
 
+        /// <summary>Set by the "Apply immediately" button; makes the next target snap into place.</summary>
+        private bool _skipNextTransition;
+
         /// <summary>
         /// Set while the game is running so <see cref="Mod"/> can release overrides
         /// during disposal. Cleared in OnDestroy.
@@ -76,6 +94,7 @@ namespace RealWeatherSync.Systems
             {
                 _climateSystem = World.GetOrCreateSystemManaged<ClimateSystem>();
                 _controller = new ClimateOverrideController(_climateSystem);
+                _planetarySystem = World.GetOrCreateSystemManaged<PlanetarySystem>();
             }
             catch (Exception e)
             {
@@ -165,6 +184,17 @@ namespace RealWeatherSync.Systems
                 return;
             }
 
+            // Latch the request here so it survives until the refresh it triggered comes back,
+            // and also collapses a transition that is already running.
+            if (Mod.ConsumeSkipTransitionRequest())
+            {
+                _skipNextTransition = true;
+                if (_hasTarget)
+                {
+                    _transitionDurationSeconds = 0.0;
+                }
+            }
+
             if (!EnsureNoConflict(settings))
             {
                 return;
@@ -199,7 +229,16 @@ namespace RealWeatherSync.Systems
             WeatherSnapshot snapshot;
             if (coordinator.TryTakeSnapshot(out snapshot))
             {
+                _latestSnapshot = snapshot;
+                InvalidateBracketCache();
                 BeginTransitionTo(snapshot, settings);
+            }
+
+            // Clock-following mode produces a continuously interpolated value, so it bypasses
+            // the fade machinery entirely rather than fighting it.
+            if (settings.FollowGameClock && TryApplyFromGameClock(settings))
+            {
+                return;
             }
 
             if (!_hasTarget)
@@ -247,12 +286,7 @@ namespace RealWeatherSync.Systems
 
         private void BeginTransitionTo(WeatherSnapshot snapshot, RealWeatherSettings settings)
         {
-            WeatherMappingOptions options;
-            options.SyncFog = settings.SyncFog;
-            options.ForceSnowAppearance = settings.ForceSnowAppearance;
-            options.FreezingTemperatureCelsius = _controller.FreezingTemperatureCelsius;
-
-            var target = WeatherMapper.Map(snapshot, options);
+            var target = WeatherMapper.Map(snapshot, BuildMappingOptions(settings));
 
             // A new result arriving mid-transition continues from wherever the
             // interpolation currently is, never from the previous start value.
@@ -261,14 +295,94 @@ namespace RealWeatherSync.Systems
             _hasTarget = true;
 
             _transitionStartSeconds = NowSeconds;
-            _transitionDurationSeconds = settings.SmoothTransitions
-                ? RealWeatherSettings.TransitionDurationSeconds
-                : 0.0;
+            _transitionDurationSeconds = _skipNextTransition ? 0.0 : settings.EffectiveTransitionSeconds;
+            _skipNextTransition = false;
 
             StatusReport.RecordTarget(target);
             Mod.Log.Info("Mapped target values: " + target +
                          " (from " + snapshot + ", transition " +
                          _transitionDurationSeconds.ToString("0", System.Globalization.CultureInfo.InvariantCulture) + " s)");
+        }
+
+        /// <summary>
+        /// Drives the weather from the in-game hour instead of a single reading: the in-game hour
+        /// selects the matching hour out of the last 24 hours of real weather at the city, and the
+        /// value is interpolated continuously between the two bracketing hours.
+        ///
+        /// With real time 10:00 and 15:00 in game, the city shows the real 15:00 weather from
+        /// yesterday. As the in-game clock advances, the weather walks through a real day.
+        ///
+        /// Returns false when the mode cannot run - the caller then falls back to the normal path.
+        /// </summary>
+        private bool TryApplyFromGameClock(RealWeatherSettings settings)
+        {
+            var snapshot = _latestSnapshot;
+            var timeline = snapshot != null ? snapshot.Timeline : null;
+            if (timeline == null || !timeline.IsUsable || _planetarySystem == null)
+            {
+                return false;
+            }
+
+            float gameHour;
+            try
+            {
+                // Read only. The in-game clock is never written by this mod.
+                gameHour = WeatherTimeline.NormaliseHour(_planetarySystem.time);
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Warn("Could not read the in-game hour (" + e.Message + "); falling back to the current reading.");
+                return false;
+            }
+
+            var targetTime = timeline.ResolveTargetTime(gameHour);
+
+            WeatherSnapshot before;
+            WeatherSnapshot after;
+            float blend;
+            if (!timeline.TryGetBracket(targetTime, out before, out after, out blend))
+            {
+                return false;
+            }
+
+            if (!ReferenceEquals(before, _bracketBefore) || !ReferenceEquals(after, _bracketAfter))
+            {
+                var options = BuildMappingOptions(settings);
+                _bracketBefore = before;
+                _bracketAfter = after;
+                _bracketBeforeTarget = WeatherMapper.Map(before, options);
+                _bracketAfterTarget = WeatherMapper.Map(after, options);
+
+                StatusReport.RecordSuccess(before);
+                Mod.Log.Info("Game clock " + gameHour.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) +
+                             "h -> real hour " + before.ObservationTimeLocal + " (" + _bracketBeforeTarget + ")");
+            }
+
+            _applied = ClimateTarget.Lerp(_bracketBeforeTarget, _bracketAfterTarget, blend);
+            _hasApplied = true;
+            _hasTarget = true;
+            _to = _applied;
+            _from = _applied;
+
+            WriteIfNeeded(_applied, settings);
+            StatusReport.RecordTarget(_applied);
+            return true;
+        }
+
+        private void InvalidateBracketCache()
+        {
+            _bracketBefore = null;
+            _bracketAfter = null;
+        }
+
+        private WeatherMappingOptions BuildMappingOptions(RealWeatherSettings settings)
+        {
+            WeatherMappingOptions options;
+            options.SyncFog = settings.SyncFog;
+            options.ForceSnowAppearance = settings.ForceSnowAppearance;
+            options.FreezingTemperatureCelsius = _controller.FreezingTemperatureCelsius;
+            options.OppositeDay = settings.OppositeDay;
+            return options;
         }
 
         private void AdvanceAndApply(RealWeatherSettings settings)
@@ -301,13 +415,29 @@ namespace RealWeatherSync.Systems
             _hasApplied = true;
 
             var transitionRunning = t < 1f;
+            WriteIfNeeded(_applied, settings, transitionRunning);
+
+            if (!transitionRunning)
+            {
+                StatusReport.RecordTarget(_applied);
+            }
+        }
+
+        /// <summary>
+        /// Pushes <paramref name="target"/> into the climate system when something actually
+        /// changed, when a transition is running, or when the periodic heartbeat is due.
+        /// Shared by both the fade path and the clock-following path.
+        /// </summary>
+        private void WriteIfNeeded(ClimateTarget target, RealWeatherSettings settings, bool forceWrite = false)
+        {
+            var now = NowSeconds;
             var heartbeatDue = now - _lastWriteSeconds >= HeartbeatSeconds;
 
-            if (!_hasWritten || !_controller.IsActive || transitionRunning || heartbeatDue || Differs(_applied, _lastWritten))
+            if (!_hasWritten || !_controller.IsActive || forceWrite || heartbeatDue || Differs(target, _lastWritten))
             {
                 try
                 {
-                    _controller.Apply(_applied, settings.SyncFog);
+                    _controller.Apply(target, settings.SyncFog);
                 }
                 catch (Exception e)
                 {
@@ -317,7 +447,7 @@ namespace RealWeatherSync.Systems
                     return;
                 }
 
-                _lastWritten = _applied;
+                _lastWritten = target;
                 _hasWritten = true;
                 _lastWriteSeconds = now;
 
@@ -327,11 +457,6 @@ namespace RealWeatherSync.Systems
                     StatusReport.SetOverridesActive(true);
                     Mod.Log.Info("Climate overrides activated.");
                 }
-            }
-
-            if (!transitionRunning)
-            {
-                StatusReport.RecordTarget(_applied);
             }
         }
 
@@ -367,6 +492,7 @@ namespace RealWeatherSync.Systems
             _hasApplied = false;
             _hasWritten = false;
             _transitionDurationSeconds = 0.0;
+            InvalidateBracketCache();
         }
 
         /// <summary>Releases the overrides if we hold any, and logs the reason once.</summary>
