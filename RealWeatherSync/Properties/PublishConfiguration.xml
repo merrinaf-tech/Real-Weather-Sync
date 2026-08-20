@@ -66,6 +66,8 @@ Real Weather Sync watches for the known ones and stands down if it spots one, re
 ## Options nobody asked for
 
 - **Time shift** - pull the weather from up to 24 hours into the past or the future.
+- **Antipode mode** - take the weather from the exact opposite side of the planet. For most of Europe that is the middle of the South Pacific.
+- **Take me somewhere awful** - one click to Yakutsk, Ushuaia, Death Valley, Cherrapunji and other places nobody would choose to live. Also the fastest way to see proper snow.
 - **Opposite day** - warm becomes cold, clear becomes overcast, dry becomes soaking.
 
 ## Privacy
@@ -120,7 +122,7 @@ MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Wea
 	-->
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 
-	<ModVersion Value="1.1.0" />
+	<ModVersion Value="1.2.0" />
 
 	<!-- Built and verified against game build 1.6.0f1. -->
 	<GameVersion Value="1.6.*" />
@@ -140,9 +142,36 @@ MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Wea
 		next release can start from them.
 	-->
 	<ChangeLog>
+# 1.2.0
+
+Two more entries under **Options nobody asked for**. Both purely cosmetic, and the weather
+mapping itself is unchanged.
+
+## Antipode mode
+
+Takes the weather from the point on the exact opposite side of the planet from your city. For
+most of Europe that is the middle of the South Pacific, so expect a lot of grey ocean drizzle.
+
+Your city stays the one you picked - only the coordinates sent to the weather service are
+mirrored.
+
+## Take me somewhere awful
+
+One click and your city gets the weather of somewhere nobody would choose to live: Yakutsk,
+Longyearbyen, Ushuaia, Reykjavik, Mount Washington, Death Valley or Cherrapunji.
+
+There is a practical side to this one: it is by far the quickest way to see snow, fog or a proper
+downpour without waiting for the weather at home to oblige. The coordinates are built in, so
+picking a preset needs no lookup at all.
+
+It resets to None when you restart - it is an action, not a setting - but the city it picked is
+remembered like any other.
+
+---
+
 # 1.1.0
 
-## Follow the in-game clock (new, off by default)
+## Follow the in-game clock (off by default)
 
 The headline feature. Normally the mod shows the chosen city's weather right now, as one reading.
 Turn this on and it instead walks that city's **last 24 hours** of real weather, picking the hour

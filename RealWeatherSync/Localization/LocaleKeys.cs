@@ -40,6 +40,7 @@ namespace RealWeatherSync.Localization
         public const string WeatherTimeShiftPast = Prefix + "Weather.TimeShiftPast";
         public const string WeatherTimeShiftFuture = Prefix + "Weather.TimeShiftFuture";
         public const string WeatherOppositeDay = Prefix + "Weather.OppositeDay";
+        public const string WeatherAntipode = Prefix + "Weather.Antipode";
 
         public const string SearchNoResults = Prefix + "Search.NoResults";
         public const string SearchPickOne = Prefix + "Search.PickOne";

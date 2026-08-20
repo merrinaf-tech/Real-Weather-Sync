@@ -26,6 +26,7 @@ namespace RealWeatherSync.Diagnostics
         private static bool _hasTarget;
         private static bool _overridesActive;
         private static bool _oppositeDay;
+        private static bool _antipode;
 
         /// <summary>Lets the status block label a result that was deliberately inverted.</summary>
         public static void SetOppositeDay(bool active)
@@ -33,6 +34,15 @@ namespace RealWeatherSync.Diagnostics
             lock (Gate)
             {
                 _oppositeDay = active;
+            }
+        }
+
+        /// <summary>Lets the status block say the reading came from the other side of the planet.</summary>
+        public static void SetAntipode(bool active)
+        {
+            lock (Gate)
+            {
+                _antipode = active;
             }
         }
 
@@ -119,6 +129,7 @@ namespace RealWeatherSync.Diagnostics
                 _hasTarget = false;
                 _overridesActive = false;
                 _oppositeDay = false;
+                _antipode = false;
             }
         }
 
@@ -231,6 +242,7 @@ namespace RealWeatherSync.Diagnostics
             bool hasTarget;
             bool overridesActive;
             bool oppositeDay;
+            bool antipode;
 
             lock (Gate)
             {
@@ -239,6 +251,7 @@ namespace RealWeatherSync.Diagnostics
                 hasTarget = _hasTarget;
                 overridesActive = _overridesActive;
                 oppositeDay = _oppositeDay;
+                antipode = _antipode;
             }
 
             if (snapshot == null)
@@ -304,6 +317,11 @@ namespace RealWeatherSync.Diagnostics
                 if (oppositeDay)
                 {
                     text += "  [" + Translation.Get(LocaleKeys.WeatherOppositeDay, "Opposite day") + "]";
+                }
+
+                if (antipode)
+                {
+                    text += "  [" + Translation.Get(LocaleKeys.WeatherAntipode, "Antipode") + "]";
                 }
             }
 

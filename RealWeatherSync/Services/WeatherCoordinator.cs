@@ -61,6 +61,7 @@ namespace RealWeatherSync.Services
         private bool _searchInProgress;
 
         private int _timeShiftHours;
+        private bool _antipodeMode;
 
         private int _disposed;
 
@@ -131,6 +132,29 @@ namespace RealWeatherSync.Services
 
                     _timeShiftHours = value;
                     // The stored reading is for the old offset; fetch again promptly.
+                    _nextAttemptSeconds = -1.0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// When true, the weather is fetched for the point diametrically opposite the resolved
+        /// city. The stored location is untouched - only the request coordinates are mirrored.
+        /// </summary>
+        public bool AntipodeMode
+        {
+            get { lock (_gate) { return _antipodeMode; } }
+            set
+            {
+                lock (_gate)
+                {
+                    if (_antipodeMode == value)
+                    {
+                        return;
+                    }
+
+                    _antipodeMode = value;
+                    // The stored reading is for the other side of the planet; fetch again now.
                     _nextAttemptSeconds = -1.0;
                 }
             }
@@ -520,20 +544,26 @@ namespace RealWeatherSync.Services
             }
 
             int shift;
+            bool antipode;
             lock (_gate)
             {
                 shift = _timeShiftHours;
+                antipode = _antipodeMode;
             }
 
+            // Mirroring happens only for the request; the resolved city stays what the player chose.
+            var requestPoint = antipode ? location.CreateAntipode() : location;
+
             StatusReport.Set(StatusKind.Refreshing);
-            Log("Weather refresh started for " + location.DisplayName +
+            Log("Weather refresh started for " + requestPoint.DisplayName +
+                (antipode ? " [antipode of " + location.DisplayName + "]" : string.Empty) +
                 (shift == 0 ? "." : " (time shift " + shift.ToString(System.Globalization.CultureInfo.InvariantCulture) + " h)."));
 
             WeatherSnapshot snapshot;
             try
             {
                 snapshot = await _weatherService
-                    .GetWeatherAsync(location.Latitude, location.Longitude, shift, token)
+                    .GetWeatherAsync(requestPoint.Latitude, requestPoint.Longitude, shift, token)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)

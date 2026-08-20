@@ -220,6 +220,26 @@ namespace RealWeatherSync.Localization
                     "Only the weather reading moves - the game clock, date and season are untouched."
                 },
                 {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.AntipodeMode)),
+                    "Antipode mode"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.AntipodeMode)),
+                    "Take the weather from the point on the exact opposite side of the planet from your chosen " +
+                    "city. For most of Europe that is the middle of the South Pacific, so expect a lot of grey " +
+                    "ocean drizzle. Your city stays the one you picked - only the weather comes from the far side."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ExtremeLocation)),
+                    "Take me somewhere awful"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.ExtremeLocation)),
+                    "Jump straight to a famously miserable place. Also the fastest way to see snow, fog or a " +
+                    "downpour without waiting for the weather at home to oblige. Resets to None when you restart, " +
+                    "but the city it picked is kept like any other."
+                },
+                {
                     _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.OppositeDay)),
                     "Opposite day"
                 },
@@ -271,6 +291,7 @@ namespace RealWeatherSync.Localization
                 { LocaleKeys.WeatherTimeShiftPast, "{0} h in the past" },
                 { LocaleKeys.WeatherTimeShiftFuture, "{0} h ahead - forecast" },
                 { LocaleKeys.WeatherOppositeDay, "Opposite day" },
+                { LocaleKeys.WeatherAntipode, "Antipode" },
 
                 { LocaleKeys.SearchNoResults, "No results - press Search" },
                 { LocaleKeys.SearchPickOne, "Select a city..." },
@@ -289,6 +310,12 @@ namespace RealWeatherSync.Localization
             foreach (var pair in WeatherCodes.All())
             {
                 entries[pair.Key] = pair.Value;
+            }
+
+            // Extreme-location presets, from the single table in ExtremeLocations.
+            foreach (ExtremeLocationOption option in Enum.GetValues(typeof(ExtremeLocationOption)))
+            {
+                entries[_settings.GetEnumValueLocaleID(option)] = ExtremeLocations.DescribeEnglish(option);
             }
 
             return entries;

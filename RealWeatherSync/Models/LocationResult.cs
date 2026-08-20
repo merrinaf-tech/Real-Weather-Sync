@@ -61,6 +61,27 @@ namespace RealWeatherSync.Models
             }
         }
 
+        /// <summary>
+        /// The point diametrically opposite this one on the globe: latitude mirrored across the
+        /// equator, longitude rotated by 180 degrees. Almost always open ocean, which is the
+        /// joke - Open-Meteo's global model answers for sea points just as happily as for land.
+        /// </summary>
+        public LocationResult CreateAntipode()
+        {
+            var latitude = -Latitude;
+            var longitude = Longitude > 0.0 ? Longitude - 180.0 : Longitude + 180.0;
+
+            return new LocationResult(
+                Query,
+                "Antipode of " + (string.IsNullOrEmpty(Name) ? Query : Name),
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                latitude,
+                longitude);
+        }
+
         public bool HasValidCoordinates
         {
             get

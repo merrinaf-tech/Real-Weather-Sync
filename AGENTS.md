@@ -258,12 +258,23 @@ listing text and this file.
 "Apply Immediately", transition-length slider, WMO condition names, temperature-unit awareness,
 plus the first two "Options nobody asked for" (time shift −24…+24 h, opposite day).
 
-**v1.2 — more "Options nobody asked for"** (lower priority; must stay in that clearly-labelled
-group so it never looks like core behaviour)
-- Antipode mode (`lat = -lat`, `lon = lon ± 180`).
-- Random city roulette from a bundled coordinate list (no extra geocoding).
-- Extreme-location presets — also genuinely useful as a manual test harness for the snow and fog
-  paths, which are otherwise hard to trigger on demand.
+**v1.2 — delivered.** Antipode mode (`LocationResult.CreateAntipode`, applied only to the request
+coordinates in `WeatherCoordinator.RefreshAsync`) and the "Take me somewhere awful" presets
+(`Settings/ExtremeLocations.cs`, hardcoded coordinates so a preset costs no geocoding).
+
+**Still on the shelf** (same group; must stay clearly labelled so it never looks like core
+behaviour)
+- Random city roulette — would reuse the `ExtremeLocations` table pattern, so it is now cheap.
 - Drama mode (intensity multiplier) and a "+N °C" slider, both single-line changes in the mapper.
 
-Anything in v1.2 must remain cosmetic and must not weaken section 1.
+**Known gaps worth doing before more features**
+- The test harnesses are NOT in the repo — they live in a session scratchpad and will be lost.
+  `AGENTS.md` section 6 describes them as if they were checked in. Moving them into a proper test
+  project is the highest-value cleanup available.
+- `LocaleEN` is the only language, though the infrastructure supports more.
+- Snow accumulation is unverified: if the mod makes it snow, ground snow may persist after the
+  weather clears. Time & Weather Anarchy ships a "Remove Snow" button, which suggests the problem
+  is real. The extreme-location presets make this testable on demand.
+- The listing has only one screenshot, which is the biggest marketing gap for a visual mod.
+
+Anything new must remain cosmetic and must not weaken section 1.

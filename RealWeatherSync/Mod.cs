@@ -27,7 +27,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.1.0";
+        public const string Version = "1.2.0";
 
         private const string LocaleId = "en-US";
 
@@ -338,6 +338,40 @@ namespace RealWeatherSync
             // The manual shift is ignored while the clock drives the choice of hour.
             Coordinator.TimeShiftHours = enabled ? 0 : (Settings != null ? Settings.TimeShiftHours : 0);
             Coordinator.RearmSnapshotPickup();
+        }
+
+        internal static void OnAntipodeModeChanged(bool enabled)
+        {
+            if (!_ready || Coordinator == null)
+            {
+                return;
+            }
+
+            Log.Info(enabled
+                ? "Antipode mode on: fetching the weather from the opposite side of the planet."
+                : "Antipode mode off.");
+
+            StatusReport.SetAntipode(enabled);
+            Coordinator.AntipodeMode = enabled;
+        }
+
+        /// <summary>Jump to one of the built-in extreme locations. No geocoding involved.</summary>
+        internal static void OnExtremeLocationSelected(ExtremeLocationOption option)
+        {
+            if (!_ready || Coordinator == null)
+            {
+                return;
+            }
+
+            var location = ExtremeLocations.Get(option);
+            if (location == null)
+            {
+                return;
+            }
+
+            Log.Info("Extreme location selected: " + location.DisplayName + ".");
+            OverridesSuspended = false;
+            Coordinator.ApplyCandidate(location);
         }
 
         internal static void OnTimeShiftChanged(int hours)

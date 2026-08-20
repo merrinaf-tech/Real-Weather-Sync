@@ -114,6 +114,8 @@ Still purely cosmetic — these bend the *reading*, never the simulation.
 | Setting | Default | Meaning |
 |---|---|---|
 | **Time shift** | 0 h | Read the weather from up to 24 hours in the past or the future. At −24 your city lives yesterday's weather; at +24 it gets tomorrow's forecast a day early. **The game clock, date and season are not affected** — only which weather reading is used. |
+| **Antipode mode** | off | Take the weather from the point diametrically opposite your city (`lat' = −lat`, `lon' = lon ± 180`). For most of Europe that is the middle of the South Pacific. Your city stays the one you chose; only the request coordinates are mirrored. |
+| **Take me somewhere awful** | None | One-click jumps to Yakutsk, Longyearbyen, Ushuaia, Reykjavik, Mount Washington, Death Valley or Cherrapunji. Coordinates are built in, so no lookup is needed. Also the fastest way to see snow, fog or a downpour without waiting for the weather at home. Resets to None on restart; the city it applied is kept. |
 | **Opposite day** | off | Mirror the weather: temperature reflected around 15 °C, cloudiness and precipitation inverted. Fog is deliberately left alone, because permanent fog hides the city and stops being funny within seconds. |
 
 ### Following the in-game clock
