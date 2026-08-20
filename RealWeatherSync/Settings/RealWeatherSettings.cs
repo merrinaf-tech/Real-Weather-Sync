@@ -53,6 +53,8 @@ namespace RealWeatherSync.Settings
         private bool _oppositeDay;
         private int _timeShiftHours;
         private bool _followGameClock;
+        private bool _antipodeMode;
+        private ExtremeLocationOption _extremeLocation = ExtremeLocationOption.None;
         private string _selectedCandidate = NoSelection;
         private string _selectedFavourite = NoSelection;
 
@@ -480,6 +482,48 @@ namespace RealWeatherSync.Settings
             }
         }
 
+        /// <summary>
+        /// Fetch the weather for the point diametrically opposite the chosen city. Usually the
+        /// middle of an ocean, which is exactly the point.
+        /// </summary>
+        [SettingsUISection(MainSection, SillyGroup)]
+        public bool AntipodeMode
+        {
+            get { return _antipodeMode; }
+            set
+            {
+                if (_antipodeMode == value)
+                {
+                    return;
+                }
+
+                _antipodeMode = value;
+                Mod.OnAntipodeModeChanged(value);
+            }
+        }
+
+        /// <summary>
+        /// One-click jumps to famously miserable places. Not persisted: it is a "take me there"
+        /// action, not a stored preference, so it resets to None on restart while the location it
+        /// applied is kept like any other city.
+        /// </summary>
+        [SettingsUISection(MainSection, SillyGroup)]
+        [Exclude]
+        public ExtremeLocationOption ExtremeLocation
+        {
+            get { return _extremeLocation; }
+            set
+            {
+                if (_extremeLocation == value)
+                {
+                    return;
+                }
+
+                _extremeLocation = value;
+                Mod.OnExtremeLocationSelected(value);
+            }
+        }
+
         [SettingsUISection(MainSection, SillyGroup)]
         public bool OppositeDay
         {
@@ -617,6 +661,8 @@ namespace RealWeatherSync.Settings
             _oppositeDay = false;
             _timeShiftHours = 0;
             _followGameClock = false;
+            _antipodeMode = false;
+            _extremeLocation = ExtremeLocationOption.None;
             _selectedCandidate = NoSelection;
             _selectedFavourite = NoSelection;
 

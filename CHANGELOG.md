@@ -3,6 +3,29 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-08-20
+
+Two more entries under "Options nobody asked for". Both strictly cosmetic; the weather mapping
+itself is unchanged.
+
+### Added
+
+- **Antipode mode.** Fetches the weather for the point diametrically opposite the chosen city
+  (`lat' = -lat`, `lon' = lon ± 180`). The resolved city is left alone — only the request
+  coordinates are mirrored, so "Lyon" stays Lyon while the sky comes from the South Pacific.
+  Verified that Open-Meteo answers for open-ocean points; most antipodes are at sea.
+- **"Take me somewhere awful".** One-click jumps to seven famously miserable places — Yakutsk,
+  Longyearbyen, Ushuaia, Reykjavik, Mount Washington, Death Valley, Cherrapunji — with hardcoded
+  coordinates, so a preset costs no geocoding request. Deliberately not persisted: it is an
+  action, not a preference, so it resets to None on restart while the city it applied is kept
+  like any other. Doubles as the quickest way to exercise the snow, fog and heavy-rain branches
+  of the mapping on demand.
+
+### Notes
+
+- The status block now labels a reading taken from the antipode, alongside the existing
+  "Opposite day" label.
+
 ## [1.1.0] - 2026-08-13
 
 Usability release. The weather mapping itself is unchanged.
