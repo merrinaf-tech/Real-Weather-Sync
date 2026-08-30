@@ -137,8 +137,12 @@ Only the city name you type and the coordinates it resolves to ever leave your P
 
 	<!--
 		ChangeLog is only read by the `Update` and `NewVersion` commands; the initial
-		`Publish` ignores it. Kept here so the 1.0.0 notes are version-controlled and the
-		next release can start from them.
+		`Publish` ignores it.
+
+		HARD LIMIT: Paradox rejects anything over 5000 characters with
+		"changelogEntry: Must be a string between 1 and 5000 length". This field is the
+		notes for THIS release only - keep just the current version here and let
+		CHANGELOG.md carry the history, or the next release will fail at upload time.
 	-->
 	<ChangeLog>
 # 1.3.0
@@ -181,85 +185,5 @@ while it is off, since that option works by nudging the temperature.
 The Advanced options now carry a short note explaining exactly what the game reads back, so you
 do not have to come to this page to find out.
 
----
-
-# 1.2.0
-
-Two more entries under **Options nobody asked for**. Both purely cosmetic, and the weather
-mapping itself is unchanged.
-
-## Antipode mode
-
-Takes the weather from the point on the exact opposite side of the planet from your city. For
-most of Europe that is the middle of the South Pacific, so expect a lot of grey ocean drizzle.
-
-Your city stays the one you picked - only the coordinates sent to the weather service are
-mirrored.
-
-## Take me somewhere awful
-
-One click and your city gets the weather of somewhere nobody would choose to live: Yakutsk,
-Longyearbyen, Ushuaia, Reykjavik, Mount Washington, Death Valley or Cherrapunji.
-
-There is a practical side to this one: it is by far the quickest way to see snow, fog or a proper
-downpour without waiting for the weather at home to oblige. The coordinates are built in, so
-picking a preset needs no lookup at all.
-
-It resets to None when you restart - it is an action, not a setting - but the city it picked is
-remembered like any other.
-
----
-
-# 1.1.0
-
-## Follow the in-game clock (off by default)
-
-The headline feature. Normally the mod shows the chosen city's weather right now, as one reading.
-Turn this on and it instead walks that city's **last 24 hours** of real weather, picking the hour
-that matches your in-game clock.
-
-It is 10:00 in the real world and 15:00 in your city? You get the weather that city actually had
-at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day
-replays a full real day, in order, instead of holding one frozen snapshot.
-
-- The weather slides continuously between the two bracketing hours, so nothing ever jumps. Fades
-  are not involved, so the transition settings and the manual time shift are disabled while this
-  mode is on.
-- The in-game clock is only **read**, never changed. Time, date, season and the day/night cycle
-  stay exactly as the game set them.
-- It costs no extra data: those hourly readings were already part of the request.
-
-## Pick your city instead of guessing
-
-- New **Search** button lists every matching city with its region, country and coordinates, so
-  you can confirm you got the right one before applying it.
-- New **Recent cities** dropdown remembers the last 10 cities you used. Switching back is one
-  click and needs no lookup.
-
-## Faster control
-
-- New **Apply Immediately** button refreshes and jumps straight to the new weather, skipping the
-  fade. It also cuts short a transition already running.
-- The transition length is now a slider (0-600 s) instead of being fixed at 120 seconds.
-
-## Clearer status
-
-- The status panel now names the conditions - "Light drizzle", "Heavy snow", "Fog" - instead of
-  only showing a WMO code number.
-- Temperatures follow the unit you picked in the game's own interface settings: Celsius,
-  Fahrenheit or Kelvin.
-
-## Options nobody asked for (new section)
-
-- **Time shift**: pull the weather from up to 24 hours into the past or the future.
-- **Opposite day**: mirror the weather. Warm becomes cold, clear becomes overcast, dry becomes
-  soaking. Fog is left alone, because permanent fog just hides the city.
-
-## Also
-
-- Source code is now public: https://github.com/merrinaf-tech/Real-Weather-Sync
-- The description has been tightened up.
-- No change to how the weather itself is calculated. Still strictly cosmetic, still writes
-  nothing to your savegame.
 	</ChangeLog>
 </Publish>
