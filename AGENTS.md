@@ -212,12 +212,25 @@ token in the project, on a command line, or in chat.**
 
 ## 6. Testing — and the one thing an AI cannot do
 
-- `WeatherMapper` is covered by a standalone harness (~50 assertions) compiled against the pure
-  files only.
-- `OpenMeteoClient` has a harness that hits the **live** API and checks real round trips,
-  cancellation, disposal, unknown cities and mismatched country qualifiers.
-- After any change under `Systems/`, re-run the Cecil scan of the built DLL to prove the
+```bash
+.\run-tests.ps1            # 172 assertions, includes live Open-Meteo calls
+.\run-tests.ps1 -Offline   # 125 assertions, no network
+```
+
+- The suite lives in `tests/RealWeatherSync.Tests` and is **not** part of `RealWeatherSync.sln`,
+  so shipping never depends on it and the release path stays untouched.
+- It **links the mod's source files** rather than referencing the built assembly (net48 vs net8).
+  Only game-free files can be linked — that is exactly why `WeatherMapper`, `WeatherTimeline`,
+  `LocationResult` and the models must stay free of game types. If adding a file breaks the test
+  build with a missing `Game.*` reference, move the game dependency out of that file; do not
+  reference the game from the tests.
+- Coverage: mapping curves and clamps, opposite day, WMO names, the in-game-clock timeline
+  (including the exact-hour bracket regression), the antipode transform, the extreme-location
+  table, and the Open-Meteo client against the **real** API.
+- After any change under `Systems/`, also re-run the Cecil scan of the built DLL to prove the
   forbidden-API list is still clean.
+- Keep `README.md`'s manual checklist in step with new features: an option that is not on that
+  list will never be regression-tested.
 
 **An AI assistant cannot verify in-game behaviour.** Not "has not" — cannot. The game is not
 launchable from here and the result is *visual*. So:
@@ -268,13 +281,12 @@ behaviour)
 - Drama mode (intensity multiplier) and a "+N °C" slider, both single-line changes in the mapper.
 
 **Known gaps worth doing before more features**
-- The test harnesses are NOT in the repo — they live in a session scratchpad and will be lost.
-  `AGENTS.md` section 6 describes them as if they were checked in. Moving them into a proper test
-  project is the highest-value cleanup available.
 - `LocaleEN` is the only language, though the infrastructure supports more.
-- Snow accumulation is unverified: if the mod makes it snow, ground snow may persist after the
-  weather clears. Time & Weather Anarchy ships a "Remove Snow" button, which suggests the problem
-  is real. The extreme-location presets make this testable on demand.
+- Snow accumulation: **parked by the author's decision, assumed fine for now — NOT verified.**
+  If the mod makes it snow, ground snow may persist after the weather clears; Time & Weather
+  Anarchy ships a "Remove Snow" button, which suggests the problem is real. The extreme-location
+  presets (Ushuaia, Yakutsk) make this testable on demand. Treat it as an open assumption, never
+  report it as working.
 - The listing has only one screenshot, which is the biggest marketing gap for a visual mod.
 
 Anything new must remain cosmetic and must not weaken section 1.

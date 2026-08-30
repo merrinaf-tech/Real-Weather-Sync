@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Test harness for the parts of Real Weather Sync that do not depend on the game.
+
+		It is deliberately NOT part of RealWeatherSync.sln: the release path
+		(build, ModPostProcessor, deploy, publish) is left exactly as it is, and these
+		tests never run as a side effect of shipping. Run them with run-tests.ps1 in
+		the repository root.
+
+		It links the mod's own source files rather than referencing the built assembly,
+		because the mod targets net48 against the game's assemblies while this runs on
+		net8.0. Only files free of game types can be linked - that constraint is exactly
+		why WeatherMapper, WeatherTimeline and the models are kept game-free.
+	-->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<LangVersion>9</LangVersion>
+		<Nullable>disable</Nullable>
+		<AssemblyName>RealWeatherSync.Tests</AssemblyName>
+		<RootNamespace>RealWeatherSync.Tests</RootNamespace>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<!-- WebRequest/ServicePointManager obsoletions in OpenMeteoClient are net48-targeted. -->
+		<NoWarn>$(NoWarn);SYSLIB0014</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Fixed relative path: no -p:ModRoot needed any more. -->
+		<ModRoot>$(MSBuildThisFileDirectory)..\..\RealWeatherSync</ModRoot>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
+
+	<!-- The tests themselves. -->
+	<ItemGroup>
+		<Compile Include="Assert.cs" />
+		<Compile Include="MapperTests.cs" />
+		<Compile Include="TimelineTests.cs" />
+		<Compile Include="LocationTests.cs" />
+		<Compile Include="OpenMeteoLiveTests.cs" />
+		<Compile Include="Program.cs" />
+	</ItemGroup>
+
+	<!--
+		Mod source under test. Every file here MUST stay free of game types; if adding one
+		breaks the build with a missing Game.* reference, the fix is to move the game
+		dependency out of that file, not to reference the game here.
+	-->
+	<ItemGroup>
+		<Compile Include="$(ModRoot)\Models\ClimateTarget.cs" />
+		<Compile Include="$(ModRoot)\Models\WeatherSnapshot.cs" />
+		<Compile Include="$(ModRoot)\Models\WeatherTimeline.cs" />
+		<Compile Include="$(ModRoot)\Models\LocationResult.cs" />
+		<Compile Include="$(ModRoot)\Models\OpenMeteoGeocodingResponse.cs" />
+		<Compile Include="$(ModRoot)\Models\OpenMeteoWeatherResponse.cs" />
+		<Compile Include="$(ModRoot)\Mapping\WeatherMapper.cs" />
+		<Compile Include="$(ModRoot)\Mapping\WeatherCodes.cs" />
+		<Compile Include="$(ModRoot)\Services\ILocationService.cs" />
+		<Compile Include="$(ModRoot)\Services\IWeatherService.cs" />
+		<Compile Include="$(ModRoot)\Services\WeatherProviderException.cs" />
+		<Compile Include="$(ModRoot)\Services\OpenMeteoClient.cs" />
+		<Compile Include="$(ModRoot)\Settings\ExtremeLocations.cs" />
+	</ItemGroup>
+
+</Project>
