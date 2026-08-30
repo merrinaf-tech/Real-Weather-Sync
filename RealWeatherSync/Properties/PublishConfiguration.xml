@@ -34,7 +34,7 @@ No coordinates, no config files, no weather codes, no manual sliders.
 
 **Follow the in-game clock** - your city replays that city's **last 24 hours** of real weather, hour by hour, matched to your own clock.
 
-&gt; It is 10:00 in the real world and 15:00 in your city? You get the weather Lyon actually had at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day replays a full real day.
+&gt; Say you picked Lyon. It is 10:00 in the real world and 15:00 in your city, so you get the weather Lyon actually had at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day replays a full real day.
 
 The weather slides continuously between hours, so nothing ever jumps. And the in-game clock is only *read*, never changed.
 
