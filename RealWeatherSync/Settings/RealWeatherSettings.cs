@@ -48,6 +48,7 @@ namespace RealWeatherSync.Settings
         private int _transitionSeconds = DefaultTransitionSeconds;
         private UpdateIntervalOption _updateInterval = UpdateIntervalOption.FifteenMinutes;
         private bool _syncFog = true;
+        private bool _syncTemperature = true;
         private bool _forceSnowAppearance = true;
         private bool _ignoreModConflicts;
         private bool _oppositeDay;
@@ -371,6 +372,35 @@ namespace RealWeatherSync.Settings
             return !HasResolvedLocation;
         }
 
+        /// <summary>Forcing snow works by nudging the visual temperature, so it needs that override.</summary>
+        public bool IsSnowForcingUnavailable()
+        {
+            return !_syncTemperature;
+        }
+
+        /// <summary>
+        /// Honest, in-mod disclosure of what the game reads back from the values this mod writes.
+        /// It belongs here as well as in the store listing: plenty of players read the options
+        /// page and never read the listing.
+        /// </summary>
+        [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIMultilineText]
+        [Exclude]
+        public string SimulationImpactNote
+        {
+            get { return Translation.Get(LocaleKeys.SimulationImpactNote, DefaultSimulationImpactNote); }
+        }
+
+        private const string DefaultSimulationImpactNote =
+            "Real Weather Sync writes the same four climate values the game's own developer weather tools " +
+            "write, and parts of the game read those values back. Heating and cooling demand, building " +
+            "upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and weather events " +
+            "all respond to temperature and precipitation - exactly as they respond to the game's own weather.\n" +
+            "The mod adds no systems, changes no rules, and writes nothing into your save.\n" +
+            "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
+            "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog affects " +
+            "nothing outside the visuals.";
+
         // ------------------------------------------------------------------
         // Status (read-only display)
         // ------------------------------------------------------------------
@@ -424,7 +454,28 @@ namespace RealWeatherSync.Settings
             }
         }
 
+        /// <summary>
+        /// Temperature is the value the largest number of game systems read back, so it gets its
+        /// own opt-out for players who want to keep the mod's influence to a minimum.
+        /// </summary>
         [SettingsUISection(MainSection, AdvancedGroup)]
+        public bool SyncTemperature
+        {
+            get { return _syncTemperature; }
+            set
+            {
+                if (_syncTemperature == value)
+                {
+                    return;
+                }
+
+                _syncTemperature = value;
+                Mod.OnMappingOptionsChanged();
+            }
+        }
+
+        [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsSnowForcingUnavailable))]
         public bool ForceSnowAppearance
         {
             get { return _forceSnowAppearance; }
@@ -656,6 +707,7 @@ namespace RealWeatherSync.Settings
             _transitionSeconds = DefaultTransitionSeconds;
             _updateInterval = UpdateIntervalOption.FifteenMinutes;
             _syncFog = true;
+            _syncTemperature = true;
             _forceSnowAppearance = true;
             _ignoreModConflicts = false;
             _oppositeDay = false;

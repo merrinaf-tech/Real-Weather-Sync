@@ -437,7 +437,7 @@ namespace RealWeatherSync.Systems
             {
                 try
                 {
-                    _controller.Apply(target, settings.SyncFog);
+                    _controller.Apply(target, settings.SyncFog, settings.SyncTemperature);
                 }
                 catch (Exception e)
                 {
