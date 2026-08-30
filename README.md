@@ -449,21 +449,26 @@ PDX SDK cache. Never put an account password in the project or on the command li
 
 ```
 RealWeatherSync.sln
+run-tests.ps1                             one command to run the automated suite
+AGENTS.md                                 working rules for AI assistants
 RealWeatherSync/
   RealWeatherSync.csproj
   Mod.cs                                  IMod entry point, options-page callbacks
   Compatibility/WeatherModCompatibility.cs
   Diagnostics/StatusKind.cs
   Diagnostics/StatusReport.cs             thread-safe status shown in the options page
+  Diagnostics/TemperatureDisplay.cs       formats to the game's own temperature unit
   Localization/LocaleEN.cs                en-US dictionary source
   Localization/LocaleKeys.cs
   Localization/Translation.cs             runtime lookup for dynamically built strings
   Mapping/WeatherMapper.cs                all mapping constants, no game dependencies
+  Mapping/WeatherCodes.cs                 WMO code to condition name
   Models/ClimateTarget.cs
-  Models/LocationResult.cs
+  Models/LocationResult.cs                includes the antipode transform
   Models/OpenMeteoGeocodingResponse.cs
   Models/OpenMeteoWeatherResponse.cs
   Models/WeatherSnapshot.cs               provider-independent observation
+  Models/WeatherTimeline.cs               24h series + in-game-hour resolution
   Services/ILocationService.cs
   Services/IWeatherService.cs
   Services/OpenMeteoClient.cs             the only Open-Meteo-specific code
@@ -471,13 +476,44 @@ RealWeatherSync/
   Services/WeatherProviderException.cs
   Settings/RealWeatherSettings.cs
   Settings/UpdateIntervalOption.cs
+  Settings/FavouriteCities.cs             recent-cities encoding
+  Settings/ExtremeLocations.cs            built-in preset coordinates
   Systems/ClimateOverrideController.cs    the only writer of ClimateSystem
   Systems/RealWeatherSystem.cs            MainLoop system, transitions, lifecycle
   Properties/PublishConfiguration.xml
+tests/RealWeatherSync.Tests/              links the game-free sources, runs on net8.0
 ```
 
 Swapping weather provider means writing one class implementing `ILocationService` and
 `IWeatherService`; nothing else knows Open-Meteo exists.
+
+### Automated tests
+
+```bash
+.\run-tests.ps1
+```
+
+172 assertions covering the weather mapping and its curve breakpoints, the in-game-clock
+timeline, the antipode transform, the extreme-location table, and the Open-Meteo client against
+the **real** API. Exit code is non-zero on failure.
+
+```bash
+.\run-tests.ps1 -Offline
+```
+
+Skips the 47 live-API assertions when there is no connection.
+
+The test project links the mod's own source files rather than referencing the built assembly,
+because the mod targets `net48` against the game while the tests run on `net8.0`. **Only files
+free of game types can be linked** — that constraint is precisely why `WeatherMapper`,
+`WeatherTimeline`, `LocationResult` and the models are kept game-free. If adding a file to the
+test project breaks the build with a missing `Game.*` reference, the fix is to move the game
+dependency out of that file, not to reference the game from the tests.
+
+The suite is deliberately **not** part of `RealWeatherSync.sln`, so the release path stays
+exactly as it is and tests never run as a side effect of shipping.
+
+These tests say nothing about in-game behaviour — that is what the manual checklist below is for.
 
 ### Logging
 
@@ -492,54 +528,103 @@ deactivated, incompatible mod detected, interval changes. Nothing is logged per 
 
 ## Manual test checklist
 
-The mod has been confirmed to load and run correctly in Cities: Skylines II (game build
-`1.6.0f1`); `Modding.log` reports `Loaded RealWeatherSync, Version=1.0.0.0`. The checklist below
-is kept as the regression pass for future releases - tick the items you have actually run rather
-than assuming any of them still hold after a change.
+`run-tests.ps1` covers everything that does not need the game. This checklist covers everything
+that does. **Run it before every release** — tick what you actually ran rather than assuming an
+item still holds after a change.
 
-- [ ] 1. Launch the game with Real Weather Sync **disabled**; confirm it appears in the mod list.
-- [ ] 2. Load an existing city; confirm the weather behaves normally.
-- [ ] 3. Enable the mod (Options -> Real Weather Sync -> Enable Real Weather).
-- [ ] 4. Enter `Lyon, France` in the *City* field.
-- [ ] 5. Press **Apply City**.
-- [ ] 6. Confirm *Resolved location* shows `Lyon, ..., France` with plausible coordinates, and
-      *Status* becomes *Connected*.
-- [ ] 7. Press **Refresh Weather Now**; confirm *Last update* changes.
-- [ ] 8. Compare the *Current weather* block against https://open-meteo.com for Lyon:
-      temperature, cloud cover, rain/snow and fog should match the "Observed" line, and the
-      "Applied" line should follow the mapping tables above.
-- [ ] 9. Watch a refresh with *Smooth Weather Transitions* on; confirm the change is gradual, not
-      instant.
-- [ ] 10. Pause the game mid-transition; confirm the transition keeps progressing smoothly and
-      nothing flickers.
-- [ ] 11. Change the simulation speed (1x / 2x / 3x); confirm transition pacing is unaffected.
-- [ ] 12. Disconnect the internet, wait for a refresh; confirm the status becomes *Offline - using
-      last valid weather*, the weather does **not** jump to zero or an extreme, and no exception
-      appears in the log. Reconnect and confirm recovery.
-- [ ] 13. Enter an invalid city (`Zzzqqqxyz`) and press Apply City; confirm *Error resolving city*,
-      the previous location is **kept**, and the game does not crash.
-- [ ] 14. Change to another valid city (`Reykjavik, Iceland`); confirm it resolves and the weather
-      transitions to the new location's conditions.
-- [ ] 15. Press **Reset to Game Weather**; confirm the overrides are released and the game's own
-      weather resumes.
-- [ ] 16. Disable the mod; confirm all overrides are released immediately.
-- [ ] 17. Return to the main menu and reload the city; confirm the stored city is still there and
-      the weather re-applies without needing Apply City again.
-- [ ] 18. Test with Time & Weather Anarchy **installed but disabled**; confirm Real Weather Sync
-      works normally. *(Time & Weather Anarchy is already installed on this machine, subscribed
-      as `88893`.)*
-- [ ] 19. Enable Time & Weather Anarchy and reload; confirm Real Weather Sync reports
-      *Incompatible weather mod active*, releases its overrides, and logs a warning. Then confirm
-      `Ignore mod conflicts` overrides that behaviour.
-- [ ] 20. Inspect `Logs\RealWeatherSync.log` and `Logs\Player.log` for exceptions.
+Keep it in step with the features: a new option that is not on this list is a feature nobody will
+ever regression-test.
 
-Extra checks worth doing:
+### A. Basics
 
-- [ ] 21. Save the city, exit, reopen: confirm the save is unaffected and no weather state was
-      serialised into it.
-- [ ] 22. Open the map editor; confirm no overrides are applied there.
-- [ ] 23. Try a city that is currently snowing (in winter, e.g. `Tromso, Norway`) and confirm snow
-      is drawn; check the temperature difference caused by *Show snow when it is really snowing*.
+- [ ] A1. Launch with the mod **disabled**; confirm it appears in the mod list and the weather is
+      the game's own.
+- [ ] A2. Enable it, load a city, and confirm `Logs\RealWeatherSync.log` shows the expected
+      version.
+- [ ] A3. Disable it mid-game; confirm all overrides are released immediately.
+- [ ] A4. Press **Reset to Game Weather**; confirm the game's weather resumes, then confirm real
+      weather comes back after an apply or refresh.
+- [ ] A5. Return to the main menu and reload; confirm the stored city is still there and the
+      weather re-applies without touching anything.
+- [ ] A6. Open the map editor; confirm **no** overrides are applied there.
+- [ ] A7. Save, exit, reopen: confirm the save is unaffected and no weather state was written
+      into it.
+- [ ] A8. Inspect `RealWeatherSync.log` and `Player.log` for exceptions.
+
+### B. Choosing a city
+
+- [ ] B1. Type `Lyon`, press **Search**; confirm the results dropdown fills **without reopening
+      the options page**, and shows region, country and coordinates.
+- [ ] B2. Pick a result; confirm it applies immediately and *Resolved location* updates.
+- [ ] B3. Type `Springfield`, search; confirm several distinct candidates appear.
+- [ ] B4. Type `Springfield, United States`; confirm only US results are listed.
+- [ ] B5. Search `Zzzqqqxyz`; confirm *Error resolving city*, the previous location is **kept**,
+      and nothing crashes.
+- [ ] B6. Use **Apply City** without searching; confirm it takes the best match directly.
+- [ ] B7. Switch cities a few times, then open **Recent cities**; confirm they are listed newest
+      first and picking one switches instantly with no lookup.
+- [ ] B8. Restart the game; confirm the recent list survived.
+
+### C. Weather accuracy
+
+- [ ] C1. Compare the *Current weather* block with https://open-meteo.com for the same city:
+      the "Observed" line should match, and "Applied" should follow the mapping tables above.
+- [ ] C2. Confirm the conditions are **named** ("Light drizzle", "Overcast"), not just a number.
+- [ ] C3. Change the game's temperature unit (Options -> Interface); confirm the status panel
+      follows it — Celsius, Fahrenheit and Kelvin.
+
+### D. Transitions
+
+- [ ] D1. With smoothing on, watch a refresh; confirm the change is gradual.
+- [ ] D2. Pause mid-transition; confirm it keeps progressing smoothly and nothing flickers.
+- [ ] D3. Change simulation speed (1x / 2x / 3x); confirm pacing is unaffected.
+- [ ] D4. Move the **Transition length** slider to 0 and to 600; confirm both behave.
+- [ ] D5. Turn smoothing off; confirm the slider greys out and changes are instant.
+- [ ] D6. Press **Apply Immediately** mid-transition; confirm it snaps to the new weather at once.
+
+### E. Follow the in-game clock
+
+- [ ] E1. Turn it on; confirm the transition slider and **Time shift** both grey out.
+- [ ] E2. Let the in-game clock run; confirm the weather **changes with the hour** and moves
+      continuously, with no visible steps at each hour boundary.
+- [ ] E3. Confirm the in-game **time, date and season do not move** because of the mod.
+- [ ] E4. Note the in-game hour and compare the applied weather with that city's real weather at
+      the most recent occurrence of that hour.
+- [ ] E5. Turn it off again; confirm it returns to the current reading without a jarring jump.
+
+### F. Options nobody asked for
+
+- [ ] F1. **Time shift** to −24; confirm the weather changes and the status block labels it as a
+      past reading. Then +24 and confirm it says forecast.
+- [ ] F2. **Antipode mode** on a European city; confirm the status labels it and the weather looks
+      like open ocean rather than the city itself.
+- [ ] F3. **Take me somewhere awful** → Ushuaia or Yakutsk; confirm it applies with no lookup
+      delay, and that snow is drawn if it is snowing there.
+- [ ] F4. Restart; confirm the preset dropdown is back to **None** but the city it applied is kept.
+- [ ] F5. **Opposite day**; confirm warm/cold and clear/overcast invert and that fog is **not**
+      inverted.
+
+### G. Resilience
+
+- [ ] G1. Disconnect the internet and wait for a refresh; confirm *Offline - using last valid
+      weather*, that the weather does **not** jump to zero or an extreme, and that no exception
+      is logged. Reconnect and confirm recovery.
+- [ ] G2. Change city while a request is in flight; confirm no crash and the newest choice wins.
+
+### H. Compatibility
+
+- [ ] H1. With Time & Weather Anarchy **installed but disabled**, confirm Real Weather Sync works
+      normally. *(It is installed on this machine, subscribed as `88893`.)*
+- [ ] H2. Enable Time & Weather Anarchy and reload; confirm the status reports *Incompatible
+      weather mod active*, overrides are released, and a warning is logged.
+- [ ] H3. Enable `Ignore mod conflicts`; confirm that overrides the check.
+
+### Open, unverified
+
+- [ ] X1. **Snow accumulation.** Jump to a snowing preset, let snow settle, then jump somewhere
+      warm. Does the ground snow melt, or does it persist? Currently **assumed fine but never
+      verified** — Time & Weather Anarchy ships a "Remove Snow" button, which suggests it may be
+      a real problem.
 
 ---
 
