@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Threading;
 using Colossal.IO.AssetDatabase;
@@ -17,17 +17,23 @@ namespace RealWeatherSync
     /// <summary>
     /// Entry point for Real Weather Sync.
     ///
-    /// Real Weather Sync is a purely cosmetic mod. It overrides four visual climate
-    /// values - temperature, cloudiness, precipitation and fog - to match the
-    /// current real world weather of a city the player picks. It does not touch the
-    /// simulation, the clock, the date, the season, the day/night cycle, disasters,
-    /// or anything that is written into a save.
+    /// It overrides four visual climate values - temperature, cloudiness, precipitation
+    /// and fog - to match the current real world weather of a city the player picks.
+    /// It writes nothing else: not the clock, the date, the season, the day/night cycle,
+    /// or anything serialised into a save.
+    ///
+    /// It is NOT true that this leaves the simulation untouched, and that claim must not
+    /// be reinstated. Overridden properties are returned by
+    /// OverridableProperty.op_Implicit, so ten simulation systems read the mod's values -
+    /// heating demand, upkeep, fire risk, leisure, tourism, snow cover, wetness and
+    /// weather events. See AGENTS.md section 3a for the verified list. The mod adds no
+    /// systems and changes no rules, but it does feed the ones already there.
     /// </summary>
     public class Mod : IMod
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.2.0";
+        public const string Version = "1.3.0";
 
         private const string LocaleId = "en-US";
 

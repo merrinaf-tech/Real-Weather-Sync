@@ -187,6 +187,22 @@ namespace RealWeatherSync.Localization
                     "Turn this off to leave the game's own fog alone."
                 },
                 {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SyncTemperature)),
+                    "Synchronise temperature"
+                },
+                {
+                    _settings.GetOptionDescLocaleID(nameof(RealWeatherSettings.SyncTemperature)),
+                    "Drive the visual temperature from the real city. Temperature is the value the largest " +
+                    "number of game systems read back - heating demand, upkeep, fire risk, tourism, snow on the " +
+                    "ground - so turning this off is the single most effective way to keep the mod's influence " +
+                    "to a minimum. The cost is that the game can no longer tell rain from snow, and the " +
+                    "temperature you see is the game's own."
+                },
+                {
+                    _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.SimulationImpactNote)),
+                    "What the game reads back"
+                },
+                {
                     _settings.GetOptionLabelLocaleID(nameof(RealWeatherSettings.ForceSnowAppearance)),
                     "Show snow when it is really snowing"
                 },
@@ -292,6 +308,20 @@ namespace RealWeatherSync.Localization
                 { LocaleKeys.WeatherTimeShiftFuture, "{0} h ahead - forecast" },
                 { LocaleKeys.WeatherOppositeDay, "Opposite day" },
                 { LocaleKeys.WeatherAntipode, "Antipode" },
+
+                {
+                    LocaleKeys.SimulationImpactNote,
+                    "Real Weather Sync writes the same four climate values the game's own developer weather " +
+                    "tools write, and parts of the game read those values back. Heating and cooling demand, " +
+                    "building upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and " +
+                    "weather events all respond to temperature and precipitation - exactly as they respond to " +
+                    "the game's own weather." + Environment.NewLine +
+                    "The mod adds no systems, changes no rules, and writes nothing into your save." +
+                    Environment.NewLine +
+                    "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
+                    "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog " +
+                    "affects nothing outside the visuals."
+                },
 
                 { LocaleKeys.SearchNoResults, "No results - press Search" },
                 { LocaleKeys.SearchPickOne, "Select a city..." },

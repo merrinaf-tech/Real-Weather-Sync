@@ -3,6 +3,46 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-08-30
+
+### Corrected
+
+- **The "does not touch the simulation" claim was false and has been retracted** from the README,
+  the store listing, `AGENTS.md` and the `Mod` class documentation.
+
+  `OverridableProperty.op_Implicit` returns `m_OverrideValue` whenever the override is active, so
+  every consumer reading through the implicit conversion sees the mod's value rather than the
+  game's. A scan of every consumer in `Game.dll` found ten simulation systems doing exactly that:
+  `AdjustElectricityConsumptionSystem`, `BuildingUpkeepSystem`, `FireHazardSystem`,
+  `FireSimulationSystem`, `LeisureSystem`, `SnowSystem`, `TourismSystem`, `TouristSpawnSystem`,
+  `WeatherHazardSystem` and `WetnessSystem`. `isRaining` / `isSnowing` / `isPrecipitating` are
+  computed from the overridden values, which pulls in their consumers too.
+
+  `WeatherHazardSystem.WeatherHazardJob.CreateWeatherEvent` is gated by
+  `CityConfigurationSystem.naturalDisasters`, so cities with natural disasters off are not
+  exposed to that one.
+
+  Verified **not** affected: `PowerPlantAISystem` (solar output) and `SoilWaterSystem`
+  (groundwater) read the base value, as does `LeisureSystem`'s precipitation input. Fog is read
+  by nothing outside rendering.
+
+  No code changed to cause this — the behaviour has been present since 1.0.0. See `AGENTS.md`
+  section 3a for the full verified table.
+
+### Added
+
+- **`Synchronise temperature`** (Advanced, default on). Turning it off drops the temperature
+  override entirely, removing 8 of the 10 couplings above, at the cost of rain-versus-snow
+  accuracy. `Show snow when it is really snowing` is disabled while it is off, since that option
+  works by nudging the visual temperature.
+- **A simulation-impact note in the options page**, so the disclosure lives inside the mod and
+  not only in the store listing.
+
+### Changed
+
+- `ClimateOverrideController.Apply` takes `includeTemperature` and releases the temperature
+  override when it is false, mirroring the existing fog behaviour.
+
 ## [1.2.0] - 2026-08-20
 
 Two more entries under "Options nobody asked for". Both strictly cosmetic; the weather mapping

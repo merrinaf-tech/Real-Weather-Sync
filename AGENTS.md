@@ -13,7 +13,15 @@ not assumed. Where something is unverified it says so.
 Real Weather Sync makes the *visual* weather of a Cities: Skylines II city match the current
 real-world weather of a city the player names, using Open-Meteo.
 
-**It is strictly cosmetic. This is the whole product promise — do not erode it.**
+**It writes only visual climate values. This is the whole product promise — do not erode it.**
+
+> **Correction, 1.3.0 — read this before repeating the old claim.** Through 1.2.0 the README,
+> the store listing and this file all said the mod "does not touch the simulation". **That was
+> wrong**, and it was published to a thousand users. `OverridableProperty.op_Implicit` returns
+> `m_OverrideValue` whenever the override is active, so *every* consumer that reads the property
+> through the implicit conversion sees the mod's value, not the game's. Ten simulation systems do
+> exactly that — see section 3a. The mod adds no systems and changes no rules, but it does feed
+> the ones that already exist. Never restore the old wording.
 
 It may write **only** these, via `Game.Simulation.ClimateSystem`:
 
@@ -89,6 +97,46 @@ hourly series costs no extra traffic — the existing request already returns
 both decide "which hour" and stacking them would only confuse.
 
 ---
+
+## 3a. What the game reads back from the overridden values
+
+Verified by scanning every consumer in `Game.dll` and classifying each read as `op_Implicit`
+(sees the mod's value) or `.value` (sees the game's own). Re-run that scan if the game updates.
+
+`isRaining`, `isSnowing` and `isPrecipitating` are **computed from** the overridden temperature
+and precipitation, so any system reading those flags is affected too.
+
+**Simulation systems that see the mod's values**
+
+| System | Reads | Effect |
+|---|---|---|
+| `AdjustElectricityConsumptionSystem` | temperature | heating / cooling demand |
+| `BuildingUpkeepSystem` | temperature | building upkeep cost |
+| `FireHazardSystem` | temperature, `isRaining` | fire risk |
+| `FireSimulationSystem` | temperature | fire behaviour |
+| `LeisureSystem` | temperature | leisure demand |
+| `SnowSystem` | temperature, precipitation | snow on the ground |
+| `TourismSystem` | temperature, precipitation, `isRaining`, `isSnowing` | tourism |
+| `TouristSpawnSystem` | same | tourist arrivals |
+| `WeatherHazardSystem` | temperature, precipitation, cloudiness | **creates weather events** |
+| `WetnessSystem` | temperature, precipitation | surface wetness |
+
+`WeatherHazardSystem.WeatherHazardJob.CreateWeatherEvent` is gated by `m_NaturalDisasters`
+(from `CityConfigurationSystem.naturalDisasters`), so players with natural disasters switched
+off are not exposed to that one.
+
+**Verified NOT affected** — these read the base value:
+`PowerPlantAISystem` (solar output, cloudiness), `SoilWaterSystem` (groundwater, precipitation),
+and `LeisureSystem`'s precipitation input.
+
+**Fog is read by nothing outside rendering**, which is why it is the safest value to drive.
+
+Outside the simulation the values also reach rendering, the in-game weather panel, rain audio,
+`Creatures.InitializeSystem` (citizen initialisation) and Discord rich presence.
+
+Since 1.3.0 the player can switch off `SyncTemperature`, which drops the temperature override
+entirely and removes 8 of the 10 couplings above. Precipitation coupling remains — there is no
+way to show weather without something reading it.
 
 ## 3. Verified game API facts
 

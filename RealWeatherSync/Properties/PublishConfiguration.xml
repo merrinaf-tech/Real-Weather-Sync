@@ -1,4 +1,4 @@
-<Publish>
+﻿<Publish>
 	<!--
 		Assigned by Paradox Mods on the first publish (2026-08-06). This id pins every
 		later `Update` / `NewVersion` run to THIS listing, so a release can never
@@ -38,45 +38,44 @@ No coordinates, no config files, no weather codes, no manual sliders.
 
 The weather slides continuously between hours, so nothing ever jumps. And the in-game clock is only *read*, never changed.
 
-## What it does
+## What you get
 
-- Takes **temperature, clouds, rain and fog** from the real city.
-- **Search** lists every matching city with its region, country and coordinates, so you confirm the right one instead of guessing. Cities you have used before are one click away.
-- **Smooth fades** between readings, driven by real time - pausing or fast-forwarding does not disturb them. Or hit **Apply Immediately** to skip straight to the new weather.
-- **Offline-proof.** Lost your connection? It holds the last good reading instead of dumping you into a cloudless void.
-- A live status panel naming the conditions, in whichever temperature unit you use.
+- **Temperature, clouds, rain and fog** from the real city, fading smoothly between readings.
+- **Search** shows region, country and coordinates, so you pick the right Springfield. Cities you have used before are one click away.
+- **Offline-proof** - it holds the last good reading instead of dumping you into a cloudless void.
+- **Real snow.** The game picks rain or snow from temperature, so the mod nudges it below freezing when the city is genuinely under snow. Optional.
 - Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
 
-## What it does NOT do
+## And it actually matters
 
-**Strictly cosmetic.** It does not touch the simulation, citizens, traffic, economy or services. It does not move the clock, the date, the season or the day/night cycle. It does not summon thunderstorms, auroras or disasters. And it writes **nothing** into your savegame.
+The mod writes the same four climate values the game's own weather tools write - and the game reads them back. So the weather you choose has consequences:
 
-The only things it changes are the same four visual climate values the game's own developer tools expose.
+- **Heating bills** and **building upkeep** follow the temperature
+- **Fire risk** follows temperature and rain
+- **Tourism** and **leisure** follow both
+- **Snow settles** on the ground, **surfaces get wet**
+- **Weather events** can be influenced - only if you have natural disasters switched on
 
-## Rain vs snow
+Solar output and groundwater are never affected, and fog changes nothing but the view.
 
-The game decides rain-or-snow from the visual temperature - there is no "draw snow" switch for mods. So when it is genuinely snowing somewhere mild, **Show snow when it is really snowing** (on by default) nudges the visual temperature just below freezing. The displayed temperature is then a bit off; turn the option off if you would rather have an honest thermometer than honest snow.
+Want it purely visual? Switch off **Synchronise temperature** in Advanced - that is what most of those systems read.
 
-## Compatibility
+It still adds no systems, changes no rules, never moves the clock, date or season, and writes **nothing** into your save.
 
-**Do not run this alongside another weather-overriding mod** - Time and Weather Anarchy, Weather Plus, Nice Weather, day/night switchers. Two mods fighting over the same climate values ends badly.
-
-Real Weather Sync watches for the known ones and stands down if it spots one, reporting *"Incompatible weather mod active"*. That check matches on mod names, so it is a guard rail, not a guarantee. Nothing else is required to run it.
+*Earlier versions of this page claimed the mod did not affect the simulation. That was wrong, and this section replaces it. No code changed - it has always worked this way.*
 
 ## Options nobody asked for
 
-- **Time shift** - pull the weather from up to 24 hours into the past or the future.
-- **Antipode mode** - take the weather from the exact opposite side of the planet. For most of Europe that is the middle of the South Pacific.
-- **Take me somewhere awful** - one click to Yakutsk, Ushuaia, Death Valley, Cherrapunji and other places nobody would choose to live. Also the fastest way to see proper snow.
+- **Time shift** - the weather from up to 24 hours into the past, or the future.
+- **Antipode mode** - the exact opposite side of the planet. For most of Europe, the middle of the South Pacific.
+- **Take me somewhere awful** - one click to Yakutsk, Ushuaia, Death Valley or Cherrapunji. Also the fastest way to see proper snow.
 - **Opposite day** - warm becomes cold, clear becomes overcast, dry becomes soaking.
 
-## Privacy
+## Before you install
 
-Two things leave your PC: **the city name you type** (to Open-Meteo's geocoder) and **the coordinates it returns** (to its forecast endpoint). That is it. No telemetry, no analytics, no identifiers.
+**Do not run this alongside another weather mod** - Time and Weather Anarchy, Weather Plus, Nice Weather, day/night switchers. They will fight over the same values. Real Weather Sync spots the known ones and stands down, but that check works by name, so it is a guard rail rather than a guarantee.
 
-## Licence
-
-MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Weather and geocoding data by [Open-Meteo](https://open-meteo.com/), licensed [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Only the city name you type and the coordinates it resolves to ever leave your PC - no telemetry, no accounts. MIT licence, [source on GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync), weather data by [Open-Meteo](https://open-meteo.com/) under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 	</LongDescription>
 
 	<Thumbnail Value="Properties/Thumbnail.png" />
@@ -122,7 +121,7 @@ MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Wea
 	-->
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 
-	<ModVersion Value="1.2.0" />
+	<ModVersion Value="1.3.0" />
 
 	<!-- Built and verified against game build 1.6.0f1. -->
 	<GameVersion Value="1.6.*" />
@@ -142,6 +141,48 @@ MIT, source on [GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync). Wea
 		next release can start from them.
 	-->
 	<ChangeLog>
+# 1.3.0
+
+## An honest correction
+
+Every version up to now told you this mod "does not touch the simulation". **That was wrong**,
+and I would rather say so plainly than quietly change the wording.
+
+The mod writes the same four climate values the game's own developer weather tools write. It
+turns out the game reads those values back, so the weather it sets behaves like real weather:
+
+- **Heating and cooling demand** follows temperature
+- **Building upkeep** follows temperature
+- **Fire risk** follows temperature and rain
+- **Leisure and tourism** follow temperature and rain
+- **Snow on the ground** and **wet surfaces** follow temperature and precipitation
+- **Weather events** can be influenced by temperature, rain and cloud cover - and only if you
+  have natural disasters switched on for your city
+
+Verified as **not** affected: solar panel output and groundwater, which always use the game's
+own weather. Fog changes nothing outside the visuals.
+
+Nothing changed in the code to cause this - it has behaved this way since 1.0.0. What changed is
+that it is now measured, documented and controllable. The mod still adds no systems, changes no
+rules and writes nothing into your save.
+
+## New: Synchronise temperature
+
+A switch in the Advanced options, on by default. Turn it off and the mod drives only cloud
+cover, precipitation and fog, leaving the temperature to the game.
+
+Temperature is what most of those systems read, so this is the single most effective way to keep
+the mod's influence to a minimum. The cost is that the game can no longer tell rain from snow,
+and the temperature you see is the game's own. "Show snow when it is really snowing" is disabled
+while it is off, since that option works by nudging the temperature.
+
+## New: a straight answer inside the mod
+
+The Advanced options now carry a short note explaining exactly what the game reads back, so you
+do not have to come to this page to find out.
+
+---
+
 # 1.2.0
 
 Two more entries under **Options nobody asked for**. Both purely cosmetic, and the weather

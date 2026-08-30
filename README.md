@@ -21,18 +21,56 @@ fog follow Lyon's actual conditions.
 - Releases every override the moment you disable the mod, reset it, leave to the menu, or the mod
   is unloaded.
 
-## What it does not do
+## What it does not write
 
-It does not touch, and contains no code that could touch:
+It does not write, and contains no code that could write:
 
-- the simulation - citizens, traffic, energy, economy, services, growth;
-- disasters, thunder, lightning, rainbows, auroras, hail or wind;
-- the game clock, the date, the season or the day/night cycle;
-- the in-game planet's latitude / longitude (`PlanetarySystem` is never referenced);
+- thunder, lightning, rainbows, auroras, hail or wind;
+- the game clock, the date, the season or the day/night cycle (`PlanetarySystem.time` is *read*
+  by the follow-the-clock mode, never assigned);
+- the in-game planet's latitude / longitude;
 - savegame data - nothing this mod produces is serialised into a city save.
 
 The only game state it writes is the `overrideValue` / `overrideState` pair of the four
 properties listed above, which is exactly what the game's own developer weather tools write.
+
+## What the game reads back
+
+**Versions up to 1.2.0 claimed this mod did not affect the simulation. That was wrong.** The
+claim has been retracted; this section replaces it.
+
+`OverridableProperty.op_Implicit` returns the override whenever one is active, so every consumer
+reading a climate property through the implicit conversion sees *this mod's* value. Ten
+simulation systems do:
+
+| System | Reads | Effect |
+|---|---|---|
+| `AdjustElectricityConsumptionSystem` | temperature | heating / cooling demand |
+| `BuildingUpkeepSystem` | temperature | building upkeep cost |
+| `FireHazardSystem` | temperature, `isRaining` | fire risk |
+| `FireSimulationSystem` | temperature | fire behaviour |
+| `LeisureSystem` | temperature | leisure demand |
+| `SnowSystem` | temperature, precipitation | snow on the ground |
+| `TourismSystem` | temperature, precipitation, `isRaining`, `isSnowing` | tourism |
+| `TouristSpawnSystem` | same | tourist arrivals |
+| `WeatherHazardSystem` | temperature, precipitation, cloudiness | creates weather events |
+| `WetnessSystem` | temperature, precipitation | surface wetness |
+
+`isRaining`, `isSnowing` and `isPrecipitating` are *computed from* the overridden temperature and
+precipitation, so systems reading only those flags are affected too.
+
+`WeatherHazardSystem.WeatherHazardJob.CreateWeatherEvent` is gated by
+`CityConfigurationSystem.naturalDisasters` — a city with natural disasters switched off is not
+exposed to that one.
+
+**Verified not affected**, because they read the base value: `PowerPlantAISystem` (solar output),
+`SoilWaterSystem` (groundwater), and `LeisureSystem`'s precipitation input. **Fog is read by
+nothing outside rendering**, which makes it the safest value to drive.
+
+The mod adds no systems and changes no rules — it feeds the ones that already exist, exactly as
+the game's own weather does. Switching off **Synchronise temperature** removes 8 of the 10
+couplings; the precipitation ones remain, because there is no way to show weather without
+something reading it.
 
 ---
 
@@ -103,6 +141,7 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 
 | Setting | Default | Meaning |
 |---|---|---|
+| **Synchronise temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
 | **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
@@ -603,6 +642,14 @@ ever regression-test.
 - [ ] F4. Restart; confirm the preset dropdown is back to **None** but the city it applied is kept.
 - [ ] F5. **Opposite day**; confirm warm/cold and clear/overcast invert and that fog is **not**
       inverted.
+
+### F2. Simulation impact (1.3.0)
+
+- [ ] F2a. Turn **Synchronise temperature** off; confirm the in-game temperature returns to the
+      game's own while clouds, rain and fog still follow the real city.
+- [ ] F2b. Confirm **Show snow when it is really snowing** greys out while it is off.
+- [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
+- [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
 
 ### G. Resilience
 

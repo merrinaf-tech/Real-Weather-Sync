@@ -75,12 +75,26 @@ namespace RealWeatherSync.Systems
             return current;
         }
 
-        /// <summary>Pushes the given visual values into the climate system.</summary>
-        public void Apply(ClimateTarget target, bool includeFog)
+        /// <summary>
+        /// Pushes the given visual values into the climate system.
+        ///
+        /// Temperature and fog are opt-out because they behave differently from the rest:
+        /// temperature is the value the largest number of game systems read (see README,
+        /// "What the game reads back"), and fog is the only one nothing outside rendering reads.
+        /// </summary>
+        public void Apply(ClimateTarget target, bool includeFog, bool includeTemperature)
         {
-            _climateSystem.temperature.overrideValue = target.TemperatureCelsius;
-            _climateSystem.temperature.overrideState = true;
-            _temperatureOverridden = true;
+            if (includeTemperature)
+            {
+                _climateSystem.temperature.overrideValue = target.TemperatureCelsius;
+                _climateSystem.temperature.overrideState = true;
+                _temperatureOverridden = true;
+            }
+            else if (_temperatureOverridden)
+            {
+                _climateSystem.temperature.overrideState = false;
+                _temperatureOverridden = false;
+            }
 
             _climateSystem.cloudiness.overrideValue = target.Cloudiness;
             _climateSystem.cloudiness.overrideState = true;

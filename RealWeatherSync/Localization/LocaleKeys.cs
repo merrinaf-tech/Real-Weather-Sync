@@ -55,5 +55,6 @@ namespace RealWeatherSync.Localization
         public const string ErrorRateLimited = Prefix + "Error.RateLimited";
 
         public const string AboutText = Prefix + "About.Text";
+        public const string SimulationImpactNote = Prefix + "About.SimulationImpact";
     }
 }
