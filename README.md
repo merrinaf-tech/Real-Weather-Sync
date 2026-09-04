@@ -4,7 +4,9 @@ A Cities: Skylines II code mod that makes your city look like the current real w
 city you choose. Type `Lyon`, press **Apply City**, and the game's sky, temperature, rain and
 fog follow Lyon's actual conditions.
 
-**This mod is strictly cosmetic.**
+**This mod writes only four visual climate values — but the game reads them back.** It never
+touches the clock, the date, the season or your save. See
+[What the game reads back](#what-the-game-reads-back).
 
 ---
 
@@ -20,6 +22,7 @@ fog follow Lyon's actual conditions.
 - Fades smoothly between readings over about two minutes of **real** time.
 - Releases every override the moment you disable the mod, reset it, leave to the menu, or the mod
   is unloaded.
+- Speaks all twelve languages the game itself ships — see [Languages](#languages).
 
 ## What it does not write
 
@@ -148,7 +151,9 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 
 ### Options nobody asked for
 
-Still purely cosmetic — these bend the *reading*, never the simulation.
+These bend *which reading is used*, never the game clock, date or season. The weather they
+produce still feeds the simulation exactly like any other weather — see
+[What the game reads back](#what-the-game-reads-back).
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -413,6 +418,49 @@ No Harmony patching is used. The mod uses only public game and modding APIs.
 
 ---
 
+## Languages
+
+Every player-facing string — option labels and tooltips, status lines, error messages, the
+`About` block and all 29 WMO condition names — is translated into the twelve locales
+Cities: Skylines II supports. The game has no other locale id to offer, so this is the complete
+set; there is no thirteenth language a player could select.
+
+| Locale | Language | Locale | Language |
+|---|---|---|---|
+| `en-US` | English (reference) | `ko-KR` | Korean |
+| `de-DE` | German | `pl-PL` | Polish |
+| `es-ES` | Spanish | `pt-BR` | Portuguese (Brazil) |
+| `fr-FR` | French | `ru-RU` | Russian |
+| `it-IT` | Italian | `zh-HANS` | Chinese (Simplified) |
+| `ja-JP` | Japanese | `zh-HANT` | Chinese (Traditional) |
+
+`zh-HANT` is a separate translation, not a character conversion of `zh-HANS`: Taiwan and Hong
+Kong usage differs in wording, not only in glyphs.
+
+### How it is put together
+
+Each language is one file in `Localization/Strings/`, holding a flat `slot -> text` table with
+**no game types in it**. `LocaleSource` is the only game-aware piece: it turns a symbolic slot
+name into the locale id the game expects, because option ids can only come from
+`ModSetting.GetOption*LocaleID`.
+
+| Slot prefix | Resolves to |
+|---|---|
+| `mod.name` | `GetSettingsLocaleID()` |
+| `tab.X` / `group.X` | option tab and group headers |
+| `label.X` / `desc.X` / `warn.X` | option text, `X` being the property name |
+| `enum.UpdateInterval.X` / `enum.ExtremeLocation.X` | dropdown values |
+| `key.X` | a `LocaleKeys` id |
+| `wmo.X` | a WMO condition name |
+
+Two tokens are expanded when an entry is read: `\n` becomes `Environment.NewLine`, and
+`{VERSION}` becomes the mod version. `{0}` placeholders are passed through untouched.
+
+Keeping the tables game-free is what lets the offline test suite check all twelve against
+`en-US`: same slot set, no empty strings, matching `{0}` placeholders, no long description left
+in English, and no WMO code or preset without a slot. **To add a string, add it to `StringsEn`
+first, then to the other eleven** — the tests fail until every table agrees.
+
 ## Known limitations
 
 1. **Rain vs snow is decided by the game from temperature.** See
@@ -650,6 +698,22 @@ ever regression-test.
 - [ ] F2b. Confirm **Show snow when it is really snowing** greys out while it is off.
 - [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
 - [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
+
+### F3. Languages (1.4.0)
+
+The offline suite proves the tables agree with each other; it cannot prove they *render*. These
+four items are what only the game can answer.
+
+- [ ] F3a. Switch the game language (Options → General) to **German**, then to **Simplified
+      Chinese**, and reopen the mod's options. Confirm every label, tooltip and status line is
+      translated, with no raw `RealWeatherSync.` ids showing through.
+- [ ] F3b. In a non-Latin language (Chinese, Japanese, Korean, Russian), confirm the glyphs
+      actually render and are not boxes or blanks — the game font, not the mod, decides this.
+- [ ] F3c. Confirm the long descriptions are not clipped by the options panel in the wordiest
+      languages: German and Russian run longest.
+- [ ] F3d. With the language set to anything but English, confirm the **Last update** line reads
+      correctly with its number substituted ("vor 5 Min.", "5 分钟前"), which exercises the `{0}`
+      placeholder.
 
 ### G. Resilience
 

@@ -7,7 +7,8 @@ namespace RealWeatherSync.Localization
     /// </summary>
     public static class LocaleKeys
     {
-        private const string Prefix = "RealWeatherSync.";
+        /// <summary>Shared prefix; LocaleSource builds ids from it for the "key." slots.</summary>
+        public const string Prefix = "RealWeatherSync.";
 
         public const string StatusDisabled = Prefix + "Status.Disabled";
         public const string StatusCityNotConfigured = Prefix + "Status.CityNotConfigured";

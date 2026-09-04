@@ -34,6 +34,11 @@ namespace RealWeatherSync.Tests
             Report(actual == expected, label + "  actual=\"" + actual + "\"  expected=\"" + expected + "\"");
         }
 
+        public static void Equal(string label, int actual, int expected)
+        {
+            Report(actual == expected, label + "  actual=" + actual + "  expected=" + expected);
+        }
+
         public static void Equal(string label, DateTime actual, DateTime expected)
         {
             Report(actual == expected, label +

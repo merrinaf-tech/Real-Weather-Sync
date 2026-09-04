@@ -40,6 +40,7 @@
 		<Compile Include="MapperTests.cs" />
 		<Compile Include="TimelineTests.cs" />
 		<Compile Include="LocationTests.cs" />
+		<Compile Include="LocalizationTests.cs" />
 		<Compile Include="OpenMeteoLiveTests.cs" />
 		<Compile Include="Program.cs" />
 	</ItemGroup>
@@ -63,6 +64,9 @@
 		<Compile Include="$(ModRoot)\Services\WeatherProviderException.cs" />
 		<Compile Include="$(ModRoot)\Services\OpenMeteoClient.cs" />
 		<Compile Include="$(ModRoot)\Settings\ExtremeLocations.cs" />
+		<Compile Include="$(ModRoot)\Localization\Strings\LocaleTable.cs" />
+		<Compile Include="$(ModRoot)\Localization\Strings\LocaleTables.cs" />
+		<Compile Include="$(ModRoot)\Localization\Strings\Strings*.cs" />
 	</ItemGroup>
 
 </Project>
