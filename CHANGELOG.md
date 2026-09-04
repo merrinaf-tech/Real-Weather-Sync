@@ -3,6 +3,40 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-09-04
+
+### Added
+
+- **Twelve languages.** Every player-facing string — option labels and tooltips, status lines,
+  error messages, the `About` block and all 29 WMO condition names — is now translated into all
+  twelve locales Cities: Skylines II supports: `en-US`, `de-DE`, `es-ES`, `fr-FR`, `it-IT`,
+  `ja-JP`, `ko-KR`, `pl-PL`, `pt-BR`, `ru-RU`, `zh-HANS` and `zh-HANT`. The game exposes no
+  other locale id, so this is the complete set.
+
+  `zh-HANT` is a separate translation rather than a character conversion of `zh-HANS`.
+
+- 77 new offline assertions covering the translation tables: identical slot sets, no empty
+  strings, matching `{0}` placeholders, no long description left untranslated, and no WMO code
+  or extreme-location preset without a slot. The suite is now 249 assertions.
+
+### Changed
+
+- Localisation was restructured so a language is one flat `slot -> text` table with no game
+  types in it (`Localization/Strings/`), plus a single game-aware resolver (`LocaleSource`)
+  that turns slot names into the ids `ModSetting.GetOption*LocaleID` produces. This is what
+  makes the tables testable offline. `LocaleEN` is gone, replaced by `StringsEn`.
+
+### Fixed
+
+- **Three places still carried the claim retracted in 1.3.0.** The in-game description of
+  *Enable Real Weather* called the mod "purely cosmetic"; the store listing's short description
+  said the same; and the README's opening line and its "Options nobody asked for" section
+  repeated it. The 1.3.0 retraction covered the README body, the listing's long description,
+  `AGENTS.md` and the `Mod` class documentation, but missed these. All now point at
+  *What the game reads back* instead.
+
+  Nothing about the mod's behaviour changed — only text that was still wrong.
+
 ## [1.3.0] - 2026-08-30
 
 ### Corrected

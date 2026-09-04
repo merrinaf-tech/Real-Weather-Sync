@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using Colossal.IO.AssetDatabase;
@@ -8,6 +9,7 @@ using Game.Modding;
 using Game.SceneFlow;
 using RealWeatherSync.Diagnostics;
 using RealWeatherSync.Localization;
+using RealWeatherSync.Localization.Strings;
 using RealWeatherSync.Services;
 using RealWeatherSync.Settings;
 using RealWeatherSync.Systems;
@@ -33,9 +35,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.3.0";
-
-        private const string LocaleId = "en-US";
+        public const string Version = "1.4.0";
 
         public static readonly ILog Log =
             LogManager.GetLogger(Id).SetShowsErrorsInUI(false);
@@ -52,7 +52,7 @@ namespace RealWeatherSync
         public static bool OverridesSuspended { get; private set; }
 
         private static OpenMeteoClient _client;
-        private static LocaleEN _locale;
+        private static List<LocaleSource> _locales;
         private static int _resetRequested;
         private static int _skipTransitionRequested;
 
@@ -83,8 +83,7 @@ namespace RealWeatherSync
             Settings = new RealWeatherSettings(this);
             Settings.RegisterInOptionsUI();
 
-            _locale = new LocaleEN(Settings);
-            GameManager.instance.localizationManager.AddSource(LocaleId, _locale);
+            RegisterLocales();
 
             AssetDatabase.global.LoadSettings(Id, Settings, new RealWeatherSettings(this));
             Log.Info("Settings loaded (enabled=" + Settings.EnableRealWeather +
@@ -146,22 +145,7 @@ namespace RealWeatherSync
                 _client = null;
             }
 
-            if (_locale != null)
-            {
-                try
-                {
-                    if (GameManager.instance != null && GameManager.instance.localizationManager != null)
-                    {
-                        GameManager.instance.localizationManager.RemoveSource(LocaleId, _locale);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Warn("Could not remove the localisation source: " + e.Message);
-                }
-
-                _locale = null;
-            }
+            UnregisterLocales();
 
             if (Settings != null)
             {
@@ -182,6 +166,65 @@ namespace RealWeatherSync
             Interlocked.Exchange(ref _resetRequested, 0);
 
             Log.Info("Real Weather Sync disposed.");
+        }
+
+        /// <summary>
+        /// Registers one dictionary source per shipped language. The game picks whichever
+        /// matches the player's interface language; the others simply sit unused, so a
+        /// failure in one must not stop the rest - least of all en-US.
+        /// </summary>
+        private static void RegisterLocales()
+        {
+            _locales = new List<LocaleSource>();
+
+            var manager = GameManager.instance != null ? GameManager.instance.localizationManager : null;
+            if (manager == null)
+            {
+                Log.Warn("No localisation manager available; the mod will fall back to its built-in English.");
+                return;
+            }
+
+            foreach (var table in LocaleTables.All())
+            {
+                try
+                {
+                    var source = new LocaleSource(Settings, table);
+                    manager.AddSource(source.LocaleId, source);
+                    _locales.Add(source);
+                }
+                catch (Exception e)
+                {
+                    Log.Warn("Could not register the " + table.LocaleId + " translation: " + e.Message);
+                }
+            }
+
+            Log.Info("Registered " + _locales.Count + " translations.");
+        }
+
+        private static void UnregisterLocales()
+        {
+            if (_locales == null)
+            {
+                return;
+            }
+
+            var manager = GameManager.instance != null ? GameManager.instance.localizationManager : null;
+            if (manager != null)
+            {
+                foreach (var source in _locales)
+                {
+                    try
+                    {
+                        manager.RemoveSource(source.LocaleId, source);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warn("Could not remove the " + source.LocaleId + " translation: " + e.Message);
+                    }
+                }
+            }
+
+            _locales = null;
         }
 
         // ------------------------------------------------------------------

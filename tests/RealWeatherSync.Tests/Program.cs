@@ -27,6 +27,7 @@ namespace RealWeatherSync.Tests
             MapperTests.Run();
             TimelineTests.Run();
             LocationTests.Run();
+            LocalizationTests.Run();
 
             if (offline)
             {

@@ -57,9 +57,12 @@ PlanetarySystem member referenced is `get_time()`.
 Mod.cs                                IMod entry point; owns settings, coordinator, options-page callbacks
 Settings/RealWeatherSettings.cs       the options page (ModSetting)
 Settings/UpdateIntervalOption.cs
-Localization/LocaleEN.cs              en-US dictionary source
+Localization/LocaleSource.cs          the ONLY game-aware localisation code: slot -> locale id
 Localization/LocaleKeys.cs            ids for strings built at runtime
 Localization/Translation.cs           runtime lookup for dynamic strings
+Localization/Strings/LocaleTable.cs   one language's slot -> text map. No game dependencies.
+Localization/Strings/LocaleTables.cs  the registry of all twelve languages
+Localization/Strings/Strings*.cs      the twelve translation tables. No game dependencies.
 Mapping/WeatherMapper.cs              ALL mapping constants. No game dependencies. Unit-testable.
 Models/                               ClimateTarget, LocationResult, WeatherSnapshot, Open-Meteo DTOs
 Models/WeatherTimeline.cs             the 24h hourly series + in-game-hour -> real-hour resolution
@@ -77,8 +80,13 @@ Diagnostics/StatusReport.cs           thread-safe status shown in the options pa
 
 - Mapping constants live in `WeatherMapper` only. Never scatter magic numbers into systems.
 - `ClimateOverrideController` is the only file that writes `ClimateSystem`.
-- `WeatherMapper` and `Models/` must stay free of game types so they can be compiled standalone
-  for tests.
+- `WeatherMapper`, `Models/` and `Localization/Strings/` must stay free of game types so they can
+  be compiled standalone for tests. Putting a game type in a translation table would take all
+  twelve languages out of the offline suite's reach.
+- A new player-facing string goes into `StringsEn` first, then into the other eleven tables. The
+  offline suite fails until every table carries the same slot set.
+- The twelve locale ids are the complete set the game supports (verified in its `Locale.cok`);
+  a thirteenth could never be selected by a player.
 - Swapping weather provider must mean writing one class implementing both service interfaces.
 
 **Threading contract:** HTTP and JSON happen on thread-pool threads; the ECS system *polls*
@@ -328,8 +336,15 @@ behaviour)
 - Random city roulette — would reuse the `ExtremeLocations` table pattern, so it is now cheap.
 - Drama mode (intensity multiplier) and a "+N °C" slider, both single-line changes in the mapper.
 
+**v1.4 — delivered.** All twelve game locales translated (`Localization/Strings/`), with the
+tables kept game-free so the offline suite can check them against `en-US`. Also swept up three
+places where the claim retracted in 1.3.0 was still standing: the in-game *Enable Real Weather*
+description, the listing's short description, and two lines in the README.
+
 **Known gaps worth doing before more features**
-- `LocaleEN` is the only language, though the infrastructure supports more.
+- The twelve translations have **never been seen rendered in game** — checklist items F3a–F3d.
+  The offline suite proves the tables agree with each other, not that the game font draws the
+  glyphs or that the panel fits the longer German and Russian strings.
 - Snow accumulation: **parked by the author's decision, assumed fine for now — NOT verified.**
   If the mod makes it snow, ground snow may persist after the weather clears; Time & Weather
   Anarchy ships a "Remove Snow" button, which suggests the problem is real. The extreme-location
