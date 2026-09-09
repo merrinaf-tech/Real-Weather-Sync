@@ -537,7 +537,6 @@ PDX SDK cache. Never put an account password in the project or on the command li
 ```
 RealWeatherSync.sln
 run-tests.ps1                             one command to run the automated suite
-AGENTS.md                                 working rules for AI assistants
 RealWeatherSync/
   RealWeatherSync.csproj
   Mod.cs                                  IMod entry point, options-page callbacks

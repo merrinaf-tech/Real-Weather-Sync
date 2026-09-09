@@ -8,3 +8,7 @@ obj/
 # Written by the CS2 ModPostProcessor's IL post-processing runner
 Library/
 *.pid
+
+# Local working notes. Not documentation for players; kept out of the published repo.
+AGENTS.md
+CLAUDE.md
