@@ -120,6 +120,7 @@ Only the city name you type and the coordinates it resolves to ever leave your P
 		crowdin, gitlab, gofundme. There is no generic "website" type.
 	-->
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
+	<ExternalLink Type="kofi" Url="https://ko-fi.com/fabiozsche" />
 
 	<ModVersion Value="1.4.1" />
 
