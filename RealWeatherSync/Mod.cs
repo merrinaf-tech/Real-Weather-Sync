@@ -35,7 +35,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.4.0";
+        public const string Version = "1.4.1";
 
         public static readonly ILog Log =
             LogManager.GetLogger(Id).SetShowsErrorsInUI(false);

@@ -39,6 +39,7 @@
 		<Compile Include="Assert.cs" />
 		<Compile Include="MapperTests.cs" />
 		<Compile Include="TimelineTests.cs" />
+		<Compile Include="OpenMeteoParsingTests.cs" />
 		<Compile Include="LocationTests.cs" />
 		<Compile Include="LocalizationTests.cs" />
 		<Compile Include="OpenMeteoLiveTests.cs" />

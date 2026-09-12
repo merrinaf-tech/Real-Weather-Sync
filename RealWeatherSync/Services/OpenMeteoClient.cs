@@ -221,6 +221,11 @@ namespace RealWeatherSync.Services
                 throw new WeatherProviderException("Could not parse the weather response.", e);
             }
 
+            return BuildSnapshot(response, shift);
+        }
+
+        internal static WeatherSnapshot BuildSnapshot(OpenMeteoWeatherResponse response, int shift)
+        {
             if (response == null)
             {
                 throw new WeatherProviderException("Weather service returned an empty response.");
@@ -275,7 +280,7 @@ namespace RealWeatherSync.Services
                     continue;
                 }
 
-                var temperature = ReadNullable(hourly.Temperature2m, i);
+                var temperature = ReadNullable(hourly.Temperature2m, i, true);
                 if (!temperature.HasValue)
                 {
                     // A gap in the series is better skipped than filled with zeroes.
@@ -371,7 +376,7 @@ namespace RealWeatherSync.Services
                     "The requested time shift falls outside the data Open-Meteo returned.");
             }
 
-            var temperature = ReadNullable(hourly.Temperature2m, index);
+            var temperature = ReadNullable(hourly.Temperature2m, index, true);
             if (!temperature.HasValue)
             {
                 throw new WeatherProviderException("The shifted hour contained no temperature.");
@@ -428,7 +433,7 @@ namespace RealWeatherSync.Services
             return -1;
         }
 
-        private static float? ReadNullable(List<float?> series, int index)
+        private static float? ReadNullable(List<float?> series, int index, bool allowNegative = false)
         {
             if (series == null || index < 0 || index >= series.Count)
             {
@@ -436,7 +441,8 @@ namespace RealWeatherSync.Services
             }
 
             var value = series[index];
-            if (!value.HasValue || float.IsNaN(value.Value) || float.IsInfinity(value.Value) || value.Value < 0f)
+            if (!value.HasValue || float.IsNaN(value.Value) || float.IsInfinity(value.Value)
+                || (!allowNegative && value.Value < 0f))
             {
                 return null;
             }

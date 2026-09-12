@@ -3,6 +3,13 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] - 2026-09-12
+
+### Fixed
+
+- Hourly temperatures below 0 °C are retained for time shifts and clock-following mode.
+- Clock-following mode no longer selects a future reading within the current hour.
+
 ## [1.4.0] - 2026-09-04
 
 ### Added

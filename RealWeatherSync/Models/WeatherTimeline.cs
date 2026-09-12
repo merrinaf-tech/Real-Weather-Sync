@@ -53,16 +53,16 @@ namespace RealWeatherSync.Models
         public DateTime ResolveTargetTime(float hourOfDay)
         {
             var hour = NormaliseHour(hourOfDay);
-            var wholeHour = (int)Math.Floor(hour);
 
-            // Start from today at that hour, then step back a day if it has not happened yet.
-            var candidate = LocalNow.Date.AddHours(wholeHour);
+            // Compare the full requested time, including minutes. Otherwise 10:30
+            // appears to have happened at 10:00 and selects a future reading.
+            var candidate = LocalNow.Date.AddHours(hour);
             if (candidate > LocalNow)
             {
                 candidate = candidate.AddDays(-1);
             }
 
-            return candidate.AddHours(hour - wholeHour);
+            return candidate;
         }
 
         /// <summary>

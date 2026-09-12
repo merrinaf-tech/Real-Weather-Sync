@@ -52,22 +52,29 @@ namespace RealWeatherSync.Tests
                 timeline.ResolveTargetTime(23f), new DateTime(2026, 8, 6, 23, 0, 0));
             Assert.Equal("fractional hours keep their minutes",
                 timeline.ResolveTargetTime(15.5f), new DateTime(2026, 8, 6, 15, 30, 0));
+            Assert.Equal("fractional current hour never selects a future reading",
+                timeline.ResolveTargetTime(10.5f), new DateTime(2026, 8, 6, 10, 30, 0));
+            var laterNow = new WeatherTimeline(samples, new DateTime(2026, 8, 7, 10, 20, 0));
+            Assert.Equal("fractional hour after the current minute selects yesterday",
+                laterNow.ResolveTargetTime(10.5f), new DateTime(2026, 8, 6, 10, 30, 0));
+            Assert.Equal("fractional hour before the current minute selects today",
+                laterNow.ResolveTargetTime(10.25f), new DateTime(2026, 8, 7, 10, 15, 0));
             Assert.Equal("25h wraps to 1h",
                 timeline.ResolveTargetTime(25f), new DateTime(2026, 8, 7, 1, 0, 0));
             Assert.Equal("-1h wraps to 23h",
                 timeline.ResolveTargetTime(-1f), new DateTime(2026, 8, 6, 23, 0, 0));
 
             var outOfWindow = 0;
-            for (var h = 0; h < 24; h++)
+            for (var h = 0; h < 48; h++)
             {
-                var age = (localNow - timeline.ResolveTargetTime(h)).TotalHours;
+                var age = (localNow - timeline.ResolveTargetTime(h / 2f)).TotalHours;
                 if (age < 0 || age >= 24)
                 {
                     outOfWindow++;
                 }
             }
 
-            Assert.True("all 24 in-game hours land inside the last 24 real hours", outOfWindow == 0);
+            Assert.True("whole and half game hours land inside the last 24 real hours", outOfWindow == 0);
 
             Assert.Section("Bracketing and blending");
             WeatherSnapshot before;
