@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!--
+		Checks which parts of the game read the climate values the mod overrides.
+
+		Deliberately NOT part of RealWeatherSync.sln, for the same reason the test project is not:
+		the release path (build, ModPostProcessor, deploy, publish) must stay exactly as it is, and
+		a developer tool must never run as a side effect of shipping. Run it with run-apiscan.ps1
+		in the repository root.
+
+		It reads Game.dll as data through Mono.Cecil rather than referencing it, so it runs on
+		net8.0 while the mod itself targets net48 against the game's assemblies.
+	-->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>disable</Nullable>
+		<AssemblyName>ApiScan</AssemblyName>
+		<RootNamespace>RealWeatherSync.ApiScan</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Mono.Cecil" Version="0.11.5" />
+	</ItemGroup>
+
+</Project>
