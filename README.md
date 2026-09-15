@@ -75,6 +75,10 @@ the game's own weather does. Switching off **Synchronise temperature** removes 8
 couplings; the precipitation ones remain, because there is no way to show weather without
 something reading it.
 
+This table is not maintained by hand: it is checked against the game's own code by
+[`run-apiscan.ps1`](#checking-a-game-update), which fails if a game update moves any system
+across. Last verified against **1.6.2f1**.
+
 ---
 
 ## Installation
@@ -537,6 +541,7 @@ PDX SDK cache. Never put an account password in the project or on the command li
 ```
 RealWeatherSync.sln
 run-tests.ps1                             one command to run the automated suite
+run-apiscan.ps1                           re-checks the consumer table after a game update
 RealWeatherSync/
   RealWeatherSync.csproj
   Mod.cs                                  IMod entry point, options-page callbacks
@@ -544,9 +549,12 @@ RealWeatherSync/
   Diagnostics/StatusKind.cs
   Diagnostics/StatusReport.cs             thread-safe status shown in the options page
   Diagnostics/TemperatureDisplay.cs       formats to the game's own temperature unit
-  Localization/LocaleEN.cs                en-US dictionary source
+  Localization/LocaleSource.cs            the only game-aware localisation code
   Localization/LocaleKeys.cs
   Localization/Translation.cs             runtime lookup for dynamically built strings
+  Localization/Strings/LocaleTable.cs     one language's slot -> text map, no game types
+  Localization/Strings/LocaleTables.cs    the registry of all twelve languages
+  Localization/Strings/Strings*.cs        the twelve translation tables
   Mapping/WeatherMapper.cs                all mapping constants, no game dependencies
   Mapping/WeatherCodes.cs                 WMO code to condition name
   Models/ClimateTarget.cs
@@ -568,6 +576,9 @@ RealWeatherSync/
   Systems/RealWeatherSystem.cs            MainLoop system, transitions, lifecycle
   Properties/PublishConfiguration.xml
 tests/RealWeatherSync.Tests/              links the game-free sources, runs on net8.0
+tools/ApiScan/                            reads Game.dll with Mono.Cecil; guards the table above
+tools/ApiScan/baseline.txt                the checked-in expected result
+tools/check-public-repo.sh                pre-push guard against working notes and build output
 ```
 
 Swapping weather provider means writing one class implementing `ILocationService` and
@@ -579,9 +590,9 @@ Swapping weather provider means writing one class implementing `ILocationService
 .\run-tests.ps1
 ```
 
-172 assertions covering the weather mapping and its curve breakpoints, the in-game-clock
-timeline, the antipode transform, the extreme-location table, and the Open-Meteo client against
-the **real** API. Exit code is non-zero on failure.
+304 assertions covering the weather mapping and its curve breakpoints, the in-game-clock
+timeline, the antipode transform, the extreme-location table, the twelve translation tables, and
+the Open-Meteo client against the **real** API. Exit code is non-zero on failure.
 
 ```bash
 .\run-tests.ps1 -Offline
@@ -600,6 +611,36 @@ The suite is deliberately **not** part of `RealWeatherSync.sln`, so the release 
 exactly as it is and tests never run as a side effect of shipping.
 
 These tests say nothing about in-game behaviour — that is what the manual checklist below is for.
+
+### Checking a game update
+
+```bash
+.\run-apiscan.ps1
+```
+
+The section [What the game reads back](#what-the-game-reads-back) is a factual claim about the
+game's code, repeated in the store listing. A game update can quietly move a system from reading
+`.value` to reading through `op_Implicit` — which would silently make that published text untrue.
+
+So the claim is not maintained by hand. `tools/ApiScan` reads `Game.dll` with Mono.Cecil, finds
+every read of the four overridden values, classifies each as seeing the mod's number or the
+game's own, and diffs the result against `tools/ApiScan/baseline.txt`:
+
+```
+UNCHANGED - 52 entries match the baseline.
+```
+
+Anything that moved is printed as a `GONE` / `NEW` pair and the exit code is non-zero. Run it
+after every game update, before deciding whether a new release is needed. Once a real change has
+been reviewed *and the documentation updated to match*, record it with:
+
+```bash
+.\run-apiscan.ps1 -UpdateBaseline
+```
+
+The baseline header records the game version it was last verified against. The tool reads that
+version from the game's asset bundle rather than from the logs, because the logs describe the
+last launch — immediately after an update they report the version you no longer have.
 
 ### Logging
 
