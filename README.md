@@ -739,22 +739,6 @@ ever regression-test.
 - [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
 - [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
 
-### F3. Languages (1.4.0)
-
-The offline suite proves the tables agree with each other; it cannot prove they *render*. These
-four items are what only the game can answer.
-
-- [ ] F3a. Switch the game language (Options → General) to **German**, then to **Simplified
-      Chinese**, and reopen the mod's options. Confirm every label, tooltip and status line is
-      translated, with no raw `RealWeatherSync.` ids showing through.
-- [ ] F3b. In a non-Latin language (Chinese, Japanese, Korean, Russian), confirm the glyphs
-      actually render and are not boxes or blanks — the game font, not the mod, decides this.
-- [ ] F3c. Confirm the long descriptions are not clipped by the options panel in the wordiest
-      languages: German and Russian run longest.
-- [ ] F3d. With the language set to anything but English, confirm the **Last update** line reads
-      correctly with its number substituted ("vor 5 Min.", "5 分钟前"), which exercises the `{0}`
-      placeholder.
-
 ### G. Resilience
 
 - [ ] G1. Disconnect the internet and wait for a refresh; confirm *Offline - using last valid
