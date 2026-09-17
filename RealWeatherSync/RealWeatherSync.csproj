@@ -221,6 +221,36 @@
 	</Target>
 
 	<!--
+		ModPublisher resolves the <Thumbnail> path from PublishConfiguration.xml with
+		Path.GetFullPath, i.e. against its own working directory. When the file is not there it
+		quietly uploads its built-in placeholder - the blue Paradox Mods hammer logo - and still
+		prints "New mod version published". Nothing in the output says the cover was substituted.
+		That is how 1.5.0 reached the live listing without the mod's own cover image.
+
+		The check is an Exec, not an MSBuild Exists(), on purpose: a child process started by
+		Exec inherits the same working directory ModPublisher will get, so this resolves the
+		path exactly the way the publisher is about to.
+
+		Note what this does and does not cover. Exec always hands the child the project
+		directory, whether the build was started from here, from the repository root or from the
+		solution, so through this pipeline the check catches a thumbnail that was renamed, moved
+		or never committed. It cannot protect a run that starts ModPublisher.exe by hand from
+		some other directory - for that, cd into this folder first.
+	-->
+	<Target Name="VerifyThumbnailResolves"
+	        Condition="'$(UseCsiiToolchain)' == 'true'"
+	        BeforeTargets="RunModPublisher">
+		<XmlPeek XmlInputPath="$(MSBuildProjectDirectory)\$(PublishConfigurationPath)"
+		         Query="/Publish/Thumbnail/@Value">
+			<Output TaskParameter="Result" ItemName="ConfiguredThumbnail" />
+		</XmlPeek>
+		<Error Condition="'@(ConfiguredThumbnail)' == ''"
+		       Text="PublishConfiguration.xml declares no &lt;Thumbnail&gt;, so ModPublisher would upload its placeholder cover." />
+		<Exec Command="if not exist &quot;@(ConfiguredThumbnail)&quot; (echo The thumbnail @(ConfiguredThumbnail) does not exist relative to this working directory, so ModPublisher would silently upload its own placeholder cover instead. Run the publish from the project directory. &amp; exit /b 1)" />
+		<Message Importance="high" Text="Thumbnail verified: @(ConfiguredThumbnail) resolves from the publisher's working directory." />
+	</Target>
+
+	<!--
 		Fail the build rather than ship a package containing anything unexpected. Runs
 		after the deploy so it inspects exactly what would be uploaded.
 
