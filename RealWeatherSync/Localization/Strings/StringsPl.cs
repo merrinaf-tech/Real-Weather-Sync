@@ -108,6 +108,8 @@
             { "label.CurrentWeatherText", "Aktualna pogoda" },
 
             // -- Advanced -----------------------------------------------------------
+            { "label.SyncAurora", "Synchronizuj zorzę z NOAA" },
+            { "desc.SyncAurora", "Opcjonalne. Używa aktualnej prognozy zorzy NOAA dla lokalizacji pogody. Zorza pojawia się tylko wtedy, gdy tam i w grze jest noc. Niedostępne przy przesunięciu czasu i śledzeniu zegara gry. Prognoza nie gwarantuje obserwacji." },
             { "label.SyncFog", "Synchronizuj mgłę" },
             { "desc.SyncFog",
                 "Wyprowadza mgłę z raportowanych kodów mgły oraz z widzialności. Zachmurzenie nigdy " +
@@ -180,7 +182,8 @@
             { "key.About.Text",
                 "Real Weather Sync {VERSION}\n" +
                 "Dane pogodowe od Open-Meteo (open-meteo.com), na licencji CC BY 4.0. Nie trzeba konta ani klucza API.\n" +
-                "Do Open-Meteo wysyłane są wyłącznie wpisana przez Ciebie nazwa miasta i ustalone na jej podstawie współrzędne." },
+                "Do Open-Meteo wysyłane są wyłącznie wpisana przez Ciebie nazwa miasta i ustalone na jej podstawie współrzędne.\n" +
+                "Opcjonalna synchronizacja zorzy pobiera globalną prognozę NOAA bez wysyłania Twojej lokalizacji." },
 
             { "key.About.SimulationImpact",
                 "Real Weather Sync zapisuje te same cztery wartości klimatu, które zapisują " +

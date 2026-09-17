@@ -109,6 +109,8 @@ namespace RealWeatherSync.Localization.Strings
             { "label.CurrentWeatherText", "Current weather" },
 
             // -- Advanced -----------------------------------------------------------
+            { "label.SyncAurora", "Synchronise aurora with NOAA" },
+            { "desc.SyncAurora", "Optional. Use NOAA's current aurora forecast for the weather location. Aurora appears only when the real location and the game are both at night. Unavailable during time shift and follow-the-game-clock modes. Forecasts do not guarantee a sighting." },
             { "label.SyncFog", "Synchronise fog" },
             { "desc.SyncFog",
                 "Derive fog from the reported fog codes and from visibility. Cloud cover never produces fog. " +
@@ -175,7 +177,8 @@ namespace RealWeatherSync.Localization.Strings
             { "key.About.Text",
                 "Real Weather Sync {VERSION}\n" +
                 "Weather data by Open-Meteo (open-meteo.com), licensed CC BY 4.0. No account and no API key required.\n" +
-                "Only the city name you type and the coordinates resolved from it are sent to Open-Meteo." },
+                "Only the city name you type and the coordinates resolved from it are sent to Open-Meteo.\n" +
+                "Optional aurora sync downloads NOAA's global forecast without sending your location." },
 
             { "key.About.SimulationImpact",
                 "Real Weather Sync writes the same four climate values the game's own developer weather " +

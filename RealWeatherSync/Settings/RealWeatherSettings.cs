@@ -49,6 +49,7 @@ namespace RealWeatherSync.Settings
         private UpdateIntervalOption _updateInterval = UpdateIntervalOption.FifteenMinutes;
         private bool _syncFog = true;
         private bool _syncTemperature = true;
+        private bool _syncAurora;
         private bool _forceSnowAppearance = true;
         private bool _ignoreModConflicts;
         private bool _oppositeDay;
@@ -474,6 +475,14 @@ namespace RealWeatherSync.Settings
             }
         }
 
+        /// <summary>Opt-in NOAA OVATION aurora forecast. Off for existing installations.</summary>
+        [SettingsUISection(MainSection, AdvancedGroup)]
+        public bool SyncAurora
+        {
+            get { return _syncAurora; }
+            set { _syncAurora = value; }
+        }
+
         [SettingsUISection(MainSection, AdvancedGroup)]
         [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsSnowForcingUnavailable))]
         public bool ForceSnowAppearance
@@ -606,7 +615,8 @@ namespace RealWeatherSync.Settings
                     "Real Weather Sync " + Mod.Version + Environment.NewLine +
                     "Weather data by Open-Meteo (open-meteo.com), CC BY 4.0. No account or API key required." +
                     Environment.NewLine +
-                    "Only the city name and the coordinates resolved from it are sent to Open-Meteo.");
+                    "Only the city name and the coordinates resolved from it are sent to Open-Meteo." +
+                    Environment.NewLine + "Optional aurora sync downloads NOAA's global forecast without sending your location.");
             }
         }
 
@@ -708,6 +718,7 @@ namespace RealWeatherSync.Settings
             _updateInterval = UpdateIntervalOption.FifteenMinutes;
             _syncFog = true;
             _syncTemperature = true;
+            _syncAurora = false;
             _forceSnowAppearance = true;
             _ignoreModConflicts = false;
             _oppositeDay = false;

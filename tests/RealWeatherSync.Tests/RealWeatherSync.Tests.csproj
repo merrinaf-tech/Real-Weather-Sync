@@ -40,6 +40,7 @@
 		<Compile Include="MapperTests.cs" />
 		<Compile Include="TimelineTests.cs" />
 		<Compile Include="OpenMeteoParsingTests.cs" />
+		<Compile Include="AuroraForecastTests.cs" />
 		<Compile Include="LocationTests.cs" />
 		<Compile Include="LocalizationTests.cs" />
 		<Compile Include="OpenMeteoLiveTests.cs" />
@@ -53,6 +54,8 @@
 	-->
 	<ItemGroup>
 		<Compile Include="$(ModRoot)\Models\ClimateTarget.cs" />
+		<Compile Include="$(ModRoot)\Models\AuroraForecast.cs" />
+		<Compile Include="$(ModRoot)\Models\SolarNight.cs" />
 		<Compile Include="$(ModRoot)\Models\WeatherSnapshot.cs" />
 		<Compile Include="$(ModRoot)\Models\WeatherTimeline.cs" />
 		<Compile Include="$(ModRoot)\Models\LocationResult.cs" />
