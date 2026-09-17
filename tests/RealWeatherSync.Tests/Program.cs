@@ -27,6 +27,7 @@ namespace RealWeatherSync.Tests
             MapperTests.Run();
             TimelineTests.Run();
             OpenMeteoParsingTests.Run();
+            AuroraForecastTests.Run();
             LocationTests.Run();
             LocalizationTests.Run();
 

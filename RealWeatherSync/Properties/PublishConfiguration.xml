@@ -42,6 +42,7 @@ The weather slides continuously between hours, so nothing ever jumps. And the in
 - **Search** shows region, country and coordinates, so you pick the right Springfield. Cities you have used before are one click away.
 - **Offline-proof** - it holds the last good reading instead of dumping you into a cloudless void.
 - **Real snow.** The game picks rain or snow from temperature, so the mod nudges it below freezing when the city is genuinely under snow. Optional.
+- **NOAA aurora forecast.** Optional and off by default. Shown only when the selected weather location and the game are both at night; disabled with time shift and follow-the-clock mode.
 - Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
 
 ## And it actually matters
@@ -54,9 +55,11 @@ The mod writes the same four climate values the game's own weather tools write -
 - **Snow settles** on the ground, **surfaces get wet**
 - **Weather events** can be influenced - only if you have natural disasters switched on
 
+When enabled, the aurora override can also affect the game's own aurora triggers and weather selection.
+
 Solar output and groundwater are never affected, and fog changes nothing but the view.
 
-Want it purely visual? Switch off **Synchronise temperature** in Advanced - that is what most of those systems read.
+To reduce simulation effects, switch off **Synchronise temperature** in Advanced. Rain and cloudiness can still affect some systems.
 
 It still adds no systems, changes no rules, never moves the clock, date or season, and writes **nothing** into your save.
 
@@ -75,7 +78,7 @@ The whole interface is translated into all twelve languages Cities: Skylines II 
 
 **Do not run this alongside another weather mod** - Time and Weather Anarchy, Weather Plus, Nice Weather, day/night switchers. They will fight over the same values. Real Weather Sync spots the known ones and stands down, but that check works by name, so it is a guard rail rather than a guarantee.
 
-Only the city name you type and the coordinates it resolves to ever leave your PC - no telemetry, no accounts. MIT licence, [source on GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync), weather data by [Open-Meteo](https://open-meteo.com/) under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Open-Meteo receives only the city name you type and its resolved coordinates. Optional aurora sync downloads NOAA's global forecast without sending your city or coordinates. No telemetry or accounts. MIT licence, [source on GitHub](https://github.com/merrinaf-tech/Real-Weather-Sync), weather data by [Open-Meteo](https://open-meteo.com/) under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), aurora forecast by [NOAA SWPC](https://www.spaceweather.gov/products/aurora-30-minute-forecast).
 	</LongDescription>
 
 	<Thumbnail Value="Properties/Thumbnail.png" />
@@ -122,9 +125,9 @@ Only the city name you type and the coordinates it resolves to ever leave your P
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/fabiozsche" />
 
-	<ModVersion Value="1.4.1" />
+	<ModVersion Value="1.5.0" />
 
-	<!-- Built and verified against game build 1.6.0f1. -->
+	<!-- Built and verified against game build 1.6.2f1. -->
 	<GameVersion Value="1.6.*" />
 
 	<!-- Public | Unlisted | Private -->
@@ -146,9 +149,8 @@ Only the city name you type and the coordinates it resolves to ever leave your P
 		CHANGELOG.md carry the history, or the next release will fail at upload time.
 	-->
 	<ChangeLog>
-# 1.4.1
+# 1.5.0
 
-- Fixed hourly weather below 0 °C being discarded.
-- Fixed clock-following mode occasionally selecting a future time.
+- Added optional NOAA aurora sync, off by default and active only when both locations are at night.
 	</ChangeLog>
 </Publish>

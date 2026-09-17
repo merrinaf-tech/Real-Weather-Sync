@@ -3,6 +3,12 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-09-17
+
+### Added
+
+- Optional NOAA aurora sync, off by default and active only when the real location and game are both at night.
+
 ## [1.4.1] - 2026-09-12
 
 ### Fixed

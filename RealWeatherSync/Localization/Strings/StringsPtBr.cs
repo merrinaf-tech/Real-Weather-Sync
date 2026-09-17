@@ -106,6 +106,8 @@
             { "label.CurrentWeatherText", "Clima atual" },
 
             // -- Advanced -----------------------------------------------------------
+            { "label.SyncAurora", "Sincronizar auroras com a NOAA" },
+            { "desc.SyncAurora", "Opcional. Usa a previsão atual de auroras da NOAA para o local do clima. A aurora aparece apenas quando é noite lá e no jogo. Indisponível com deslocamento de horário ou ao seguir o relógio do jogo. A previsão não garante a observação." },
             { "label.SyncFog", "Sincronizar neblina" },
             { "desc.SyncFog",
                 "Deriva a neblina dos códigos de neblina informados e da visibilidade. A cobertura " +
@@ -178,7 +180,8 @@
             { "key.About.Text",
                 "Real Weather Sync {VERSION}\n" +
                 "Dados climáticos do Open-Meteo (open-meteo.com), sob licença CC BY 4.0. Não é preciso conta nem chave de API.\n" +
-                "Só o nome da cidade que você digita e as coordenadas obtidas a partir dele são enviados ao Open-Meteo." },
+                "Só o nome da cidade que você digita e as coordenadas obtidas a partir dele são enviados ao Open-Meteo.\n" +
+                "A sincronização opcional de auroras baixa a previsão global da NOAA sem enviar sua localização." },
 
             { "key.About.SimulationImpact",
                 "O Real Weather Sync grava os mesmos quatro valores climáticos que as ferramentas de " +

@@ -109,6 +109,8 @@
             { "label.CurrentWeatherText", "Aktuelles Wetter" },
 
             // -- Advanced -----------------------------------------------------------
+            { "label.SyncAurora", "Polarlichter mit NOAA synchronisieren" },
+            { "desc.SyncAurora", "Optional. Verwendet die aktuelle NOAA-Polarlichtvorhersage für den Wetterort. Polarlichter erscheinen nur, wenn es dort und im Spiel Nacht ist. Nicht verfügbar bei Zeitverschiebung oder Spieluhrmodus. Eine Vorhersage garantiert keine Sichtung." },
             { "label.SyncFog", "Nebel synchronisieren" },
             { "desc.SyncFog",
                 "Leitet Nebel aus den gemeldeten Nebelcodes und aus der Sichtweite ab. Bewölkung " +
@@ -182,7 +184,8 @@
             { "key.About.Text",
                 "Real Weather Sync {VERSION}\n" +
                 "Wetterdaten von Open-Meteo (open-meteo.com), lizenziert unter CC BY 4.0. Kein Konto und kein API-Schlüssel nötig.\n" +
-                "An Open-Meteo werden ausschließlich der eingegebene Stadtname und die daraus ermittelten Koordinaten gesendet." },
+                "An Open-Meteo werden ausschließlich der eingegebene Stadtname und die daraus ermittelten Koordinaten gesendet.\n" +
+                "Die optionale Polarlicht-Synchronisierung lädt die globale NOAA-Vorhersage herunter, ohne deinen Standort zu senden." },
 
             { "key.About.SimulationImpact",
                 "Real Weather Sync schreibt dieselben vier Klimawerte, die auch die spieleigenen " +

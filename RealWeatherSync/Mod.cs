@@ -19,8 +19,8 @@ namespace RealWeatherSync
     /// <summary>
     /// Entry point for Real Weather Sync.
     ///
-    /// It overrides four visual climate values - temperature, cloudiness, precipitation
-    /// and fog - to match the current real world weather of a city the player picks.
+    /// It overrides four weather values - temperature, cloudiness, precipitation
+    /// and fog - and can optionally sync aurora to NOAA's current forecast.
     /// It writes nothing else: not the clock, the date, the season, the day/night cycle,
     /// or anything serialised into a save.
     ///
@@ -35,7 +35,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.4.1";
+        public const string Version = "1.5.0";
 
         public static readonly ILog Log =
             LogManager.GetLogger(Id).SetShowsErrorsInUI(false);

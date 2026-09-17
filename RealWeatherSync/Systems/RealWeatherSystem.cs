@@ -9,6 +9,7 @@ using RealWeatherSync.Diagnostics;
 using RealWeatherSync.Mapping;
 using RealWeatherSync.Models;
 using RealWeatherSync.Settings;
+using RealWeatherSync.Services;
 
 namespace RealWeatherSync.Systems
 {
@@ -37,6 +38,9 @@ namespace RealWeatherSync.Systems
 
         private ClimateSystem _climateSystem;
         private ClimateOverrideController _controller;
+        private AuroraForecastService _auroraForecast;
+        private LocationResult _auroraSnapshotLocation;
+        private bool _auroraSnapshotAntipode;
 
         /// <summary>
         /// Read-only clock source for the "follow the in-game clock" mode. This system NEVER
@@ -74,6 +78,7 @@ namespace RealWeatherSync.Systems
 
         private double _lastWriteSeconds;
         private bool _loggedOverridesActive;
+        private bool _auroraFaultLogged;
 
         /// <summary>Set by the "Apply immediately" button; makes the next target snap into place.</summary>
         private bool _skipNextTransition;
@@ -95,6 +100,7 @@ namespace RealWeatherSync.Systems
                 _climateSystem = World.GetOrCreateSystemManaged<ClimateSystem>();
                 _controller = new ClimateOverrideController(_climateSystem);
                 _planetarySystem = World.GetOrCreateSystemManaged<PlanetarySystem>();
+                _auroraForecast = new AuroraForecastService("RealWeatherSync/" + Mod.Version + " (Cities Skylines II mod)");
             }
             catch (Exception e)
             {
@@ -230,8 +236,25 @@ namespace RealWeatherSync.Systems
             if (coordinator.TryTakeSnapshot(out snapshot))
             {
                 _latestSnapshot = snapshot;
+                _auroraSnapshotLocation = coordinator.Location;
+                _auroraSnapshotAntipode = settings.AntipodeMode;
                 InvalidateBracketCache();
                 BeginTransitionTo(snapshot, settings);
+            }
+
+            try
+            {
+                UpdateAurora(settings, coordinator);
+                _auroraFaultLogged = false;
+            }
+            catch (Exception e)
+            {
+                if (!_auroraFaultLogged)
+                {
+                    Mod.Log.Error(e, "Aurora sync failed; its override will be released.");
+                    _auroraFaultLogged = true;
+                }
+                try { _controller.ReleaseAurora(); } catch (Exception) { }
             }
 
             // Clock-following mode produces a continuously interpolated value, so it bypasses
@@ -249,6 +272,56 @@ namespace RealWeatherSync.Systems
             }
 
             AdvanceAndApply(settings);
+        }
+
+        private void UpdateAurora(RealWeatherSettings settings, WeatherCoordinator coordinator)
+        {
+            if (!settings.SyncAurora || settings.FollowGameClock || settings.TimeShiftHours != 0)
+            {
+                _controller.ReleaseAurora();
+                return;
+            }
+
+            var location = coordinator.Location;
+            if (location == null || !ReferenceEquals(location, _auroraSnapshotLocation)
+                || settings.AntipodeMode != _auroraSnapshotAntipode || !_hasTarget)
+            {
+                _controller.ReleaseAurora();
+                return;
+            }
+
+            // The forecast is global: NOAA receives no city name or coordinates.
+            _auroraForecast.Tick();
+            var now = DateTimeOffset.UtcNow;
+            var forecast = _auroraForecast.ForecastFor(now);
+            var intensity = 0f;
+            var point = settings.AntipodeMode ? location.CreateAntipode() : location;
+            if (forecast != null && SolarNight.IsDark(point.Latitude, point.Longitude, now)
+                && IsGameNight())
+            {
+                intensity = forecast.ProbabilityAt(point.Latitude, point.Longitude);
+            }
+
+            // An unavailable or stale forecast means no *claimed real* aurora.
+            _controller.ApplyAurora(intensity);
+        }
+
+        private bool IsGameNight()
+        {
+            if (_planetarySystem == null) return false;
+            try
+            {
+                var sun = _planetarySystem.SunLight;
+                // The game's PlanetarySystem points the sun light toward the scene.
+                // A positive forward.y means the sun is below the horizon; 0.1 is
+                // roughly six degrees below it, beyond civil twilight.
+                return sun.isValid && sun.transform != null && sun.transform.forward.y >= 0.1f;
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Warn("Could not read game sunlight for aurora: " + e.Message);
+                return false;
+            }
         }
 
         /// <summary>
@@ -538,11 +611,21 @@ namespace RealWeatherSync.Systems
         {
             ReleaseOverrides("mod disposed");
             ResetTransition();
+            if (_auroraForecast != null)
+            {
+                _auroraForecast.Dispose();
+                _auroraForecast = null;
+            }
         }
 
         protected override void OnDestroy()
         {
             ReleaseOverrides("system destroyed");
+            if (_auroraForecast != null)
+            {
+                _auroraForecast.Dispose();
+                _auroraForecast = null;
+            }
 
             if (ReferenceEquals(Instance, this))
             {

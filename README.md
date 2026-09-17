@@ -4,7 +4,8 @@ A Cities: Skylines II code mod that makes your city look like the current real w
 city you choose. Type `Lyon`, press **Apply City**, and the game's sky, temperature, rain and
 fog follow Lyon's actual conditions.
 
-**This mod writes only four visual climate values — but the game reads them back.** It never
+**The core weather sync writes four climate values — but the game reads them back.** Optional
+NOAA aurora sync also writes `aurora` when enabled. The mod never
 touches the clock, the date, the season or your save. See
 [What the game reads back](#what-the-game-reads-back).
 
@@ -14,11 +15,12 @@ touches the clock, the date, the season or your save. See
 
 - Resolves the city name you type into coordinates, using Open-Meteo's free geocoding service.
 - Fetches the current conditions for those coordinates every 15, 30 or 60 minutes (your choice).
-- Overrides exactly four visual climate values through `Game.Simulation.ClimateSystem`:
+- Overrides four weather values through `Game.Simulation.ClimateSystem`:
   - `temperature`
   - `cloudiness`
   - `precipitation`
   - `fog`
+- Optionally uses NOAA's current OVATION forecast to drive the game's aurora at night.
 - Fades smoothly between readings over about two minutes of **real** time.
 - Releases every override the moment you disable the mod, reset it, leave to the menu, or the mod
   is unloaded.
@@ -28,14 +30,14 @@ touches the clock, the date, the season or your save. See
 
 It does not write, and contains no code that could write:
 
-- thunder, lightning, rainbows, auroras, hail or wind;
+- thunder, lightning, rainbows, hail or wind;
 - the game clock, the date, the season or the day/night cycle (`PlanetarySystem.time` is *read*
   by the follow-the-clock mode, never assigned);
 - the in-game planet's latitude / longitude;
 - savegame data - nothing this mod produces is serialised into a city save.
 
-The only game state it writes is the `overrideValue` / `overrideState` pair of the four
-properties listed above, which is exactly what the game's own developer weather tools write.
+The only game state it writes is `overrideValue` / `overrideState` for those four weather
+properties and, if enabled, `aurora`.
 
 ## What the game reads back
 
@@ -65,6 +67,9 @@ precipitation, so systems reading only those flags are affected too.
 `WeatherHazardSystem.WeatherHazardJob.CreateWeatherEvent` is gated by
 `CityConfigurationSystem.naturalDisasters` — a city with natural disasters switched off is not
 exposed to that one.
+
+When the optional aurora override is enabled, the game's `ClimateSystem` also reads that value
+for aurora triggers and weather selection. It is not a rendering-only input.
 
 **Verified not affected**, because they read the base value: `PowerPlantAISystem` (solar output),
 `SoilWaterSystem` (groundwater), and `LeisureSystem`'s precipitation input. **Fog is read by
@@ -150,8 +155,13 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 |---|---|---|
 | **Synchronise temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
 | **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
+| **Synchronise aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. Unavailable with time shift or Follow the in-game clock. The forecast does not guarantee a sighting. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
+
+NOAA's forecast has a future validity time. The mod keeps each grid until that time arrives,
+so the first synchronised aurora may take 30–90 minutes after enabling the option. It samples
+the grid at the weather location; auroras visible only on the distant horizon may be missed.
 
 ### Options nobody asked for
 
@@ -296,7 +306,8 @@ temperature to 1.5 C below the game's freezing point in exactly that case. The c
 plainly: **the temperature shown in game will then differ from the real temperature.** Turn the
 setting off if you would rather have an accurate temperature reading than accurate precipitation.
 
-The season, the date and the simulation are still never changed. Nothing forces winter.
+The season and date are unchanged; the overridden temperature and precipitation can still
+affect the game's snow and other simulation systems. Nothing forces winter.
 
 ### Fog
 
@@ -321,8 +332,8 @@ code alone.
 
 ### Deliberately not controlled
 
-Thunder, lightning, rainbow, aurora, hail, wind, disasters, season, date, game time, and the
-planet's latitude / longitude. None of these are written anywhere in the mod.
+Thunder, lightning, rainbow, hail, wind, disasters, season, date, game time, and the
+planet's latitude / longitude. Aurora is written only when its separate NOAA option is enabled.
 
 ---
 
@@ -365,16 +376,17 @@ values** - the game simply keeps showing the last good reading, and the status c
 
 Real Weather Sync uses [Open-Meteo](https://open-meteo.com/). No account, no sign-up, no API key.
 
-Exactly two things leave your machine:
+The weather service receives only:
 
 1. **The city name you type**, sent to `https://geocoding-api.open-meteo.com/v1/search` when you
    press *Apply City*.
 2. **The latitude and longitude** that lookup returned, sent to
    `https://api.open-meteo.com/v1/forecast` on each refresh.
 
-Nothing else is collected, stored remotely or transmitted. No telemetry, no analytics, no
-identifiers. The city name and the coordinates are also written to the mod's log file on your own
-machine, as diagnostics.
+If you enable **Synchronise aurora with NOAA**, the mod also downloads the global OVATION grid
+from `https://services.swpc.noaa.gov/json/ovation_aurora_latest.json` every 15 minutes while
+active. No city name or coordinates are included in that request. No telemetry or analytics are
+sent. The city name and coordinates are also written to the mod's local log for diagnostics.
 
 Weather data by Open-Meteo, licensed CC BY 4.0.
 
@@ -738,6 +750,21 @@ ever regression-test.
 - [ ] F2b. Confirm **Show snow when it is really snowing** greys out while it is off.
 - [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
 - [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
+- [ ] F2e. Confirm **Synchronise aurora with NOAA** is off by default. Turn off **Time shift**
+      and **Follow the in-game clock**, choose a high-latitude location, and enable aurora.
+      It must be dark at the real location and in the game. Note the NOAA grid's **Forecast
+      Time** and compare only when that time arrives (the first usable forecast can take
+      30–90 minutes). No aurora is expected when NOAA predicts none at the location.
+- [ ] F2f. If an aurora is forecast, check whether clouds obscure it or it appears in front of
+      them. Disable the aurora option, reset the mod, and return to the menu; confirm its
+      override is released each time. Check that **Time shift** and **Follow the in-game
+      clock** suspend NOAA's current-only aurora forecast. Record any exception in the mod log.
+- [x] F2g. Confirm an aurora actually appears in game with the NOAA option enabled at a
+      suitable location. **Author test, 2026-09-17:** aurora visible in game.
+
+      Earlier testing found no active aurora location; the later positive sighting closes the
+      visual activation case. Cloud occlusion and the individual F2e/F2f release checks have
+      not been specifically reported.
 
 ### G. Resilience
 
@@ -754,12 +781,16 @@ ever regression-test.
       weather mod active*, overrides are released, and a warning is logged.
 - [ ] H3. Enable `Ignore mod conflicts`; confirm that overrides the check.
 
-### Open, unverified
+### Snow accumulation
 
-- [ ] X1. **Snow accumulation.** Jump to a snowing preset, let snow settle, then jump somewhere
-      warm. Does the ground snow melt, or does it persist? Currently **assumed fine but never
-      verified** — Time & Weather Anarchy ships a "Remove Snow" button, which suggests it may be
-      a real problem.
+- [x] X1. **Snow accumulation.** With **Synchronise temperature** and **Show snow when it is
+      really snowing** on, choose a location whose *Current weather* block actually says snow
+      (a preset alone does not guarantee it). Keep the simulation running until snow is visible
+      on the ground; record a screenshot. Switch to a warm, dry location such as Death Valley,
+      verify the new reading is warm and dry, then press **Apply Immediately**. Leave the
+      simulation running for a substantial in-game period and record whether the snow melts,
+      remains, or grows despite no new snowfall. A paused simulation cannot test melting.
+      **Author test, 2026-09-17:** snow accumulation and clearing worked as expected in game.
 
 ---
 

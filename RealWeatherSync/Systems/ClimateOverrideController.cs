@@ -7,11 +7,11 @@ namespace RealWeatherSync.Systems
     /// <summary>
     /// The only place in the mod that writes to Game.Simulation.ClimateSystem.
     ///
-    /// It touches exactly four overridable properties - temperature, cloudiness,
-    /// precipitation and fog - and remembers which of them it switched on, so
+    /// It touches temperature, cloudiness, precipitation, fog, and optional aurora,
+    /// and remembers which of them it switched on, so
     /// releasing never clears an override that belongs to somebody else.
     ///
-    /// Explicitly NOT touched: currentDate (season / date), aurora, thunder,
+    /// Explicitly NOT touched: currentDate (season / date), thunder,
     /// rainbow, hail, wind, latitude / longitude, or anything outside ClimateSystem.
     ///
     /// Must only be used from the main thread.
@@ -24,6 +24,7 @@ namespace RealWeatherSync.Systems
         private bool _cloudinessOverridden;
         private bool _precipitationOverridden;
         private bool _fogOverridden;
+        private bool _auroraOverridden;
 
         public ClimateOverrideController(ClimateSystem climateSystem)
         {
@@ -38,7 +39,21 @@ namespace RealWeatherSync.Systems
         /// <summary>True when at least one override is currently owned by this mod.</summary>
         public bool IsActive
         {
-            get { return _temperatureOverridden || _cloudinessOverridden || _precipitationOverridden || _fogOverridden; }
+            get { return _temperatureOverridden || _cloudinessOverridden || _precipitationOverridden || _fogOverridden || _auroraOverridden; }
+        }
+
+        public void ApplyAurora(float intensity)
+        {
+            _climateSystem.aurora.overrideValue = Math.Max(0f, Math.Min(1f, intensity));
+            _climateSystem.aurora.overrideState = true;
+            _auroraOverridden = true;
+        }
+
+        public void ReleaseAurora()
+        {
+            if (!_auroraOverridden) return;
+            _climateSystem.aurora.overrideState = false;
+            _auroraOverridden = false;
         }
 
         /// <summary>
@@ -151,6 +166,12 @@ namespace RealWeatherSync.Systems
             {
                 _climateSystem.fog.overrideState = false;
                 _fogOverridden = false;
+                releasedAnything = true;
+            }
+
+            if (_auroraOverridden)
+            {
+                ReleaseAurora();
                 releasedAnything = true;
             }
 

@@ -101,6 +101,8 @@
             { "label.CurrentWeatherText", "현재 날씨" },
 
             // -- Advanced -----------------------------------------------------------
+            { "label.SyncAurora", "NOAA 오로라 예보와 동기화" },
+            { "desc.SyncAurora", "선택 사항입니다. 날씨 위치의 NOAA 최신 오로라 예보를 사용합니다. 해당 지역과 게임이 모두 밤일 때만 표시됩니다. 시간 이동이나 게임 시계 따라가기 모드에서는 사용할 수 없습니다. 예보가 실제 관측을 보장하지는 않습니다." },
             { "label.SyncFog", "안개 동기화" },
             { "desc.SyncFog",
                 "보고된 안개 코드와 시정에서 안개를 이끌어 냅니다. 구름량이 안개를 만들어 내는 일은 " +
@@ -165,7 +167,8 @@
             { "key.About.Text",
                 "Real Weather Sync {VERSION}\n" +
                 "날씨 데이터 제공: Open-Meteo(open-meteo.com), CC BY 4.0 라이선스. 계정도 API 키도 필요 없습니다.\n" +
-                "Open-Meteo로 전송되는 것은 입력한 도시 이름과 그로부터 확정된 좌표뿐입니다." },
+                "Open-Meteo로 전송되는 것은 입력한 도시 이름과 그로부터 확정된 좌표뿐입니다.\n" +
+                "선택적 오로라 동기화는 위치를 전송하지 않고 NOAA의 전 세계 예보를 다운로드합니다." },
 
             { "key.About.SimulationImpact",
                 "Real Weather Sync는 게임 자체의 개발자용 날씨 도구가 쓰는 것과 같은 네 가지 기후 값을 " +
