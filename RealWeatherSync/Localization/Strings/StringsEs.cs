@@ -108,6 +108,8 @@
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Sincronizar auroras con NOAA" },
             { "desc.SyncAurora", "Opcional. Usa el pronóstico actual de auroras de NOAA para la ubicación meteorológica. La aurora aparece solo si es de noche allí y en el juego. Mantiene este comportamiento al seguir el reloj del juego; solo deja de estar disponible con un cambio de hora manual. Un pronóstico no garantiza que se vea." },
+            { "label.SyncSunPosition", "Sincronizar la posición real del sol" },
+            { "desc.SyncSunPosition", "Opcional y desactivado por defecto. Coloca el sol visible en su posición real actual sobre la ubicación meteorológica. La luz y las sombras lo siguen, pero el reloj, la fecha, la estación y la partida no cambian. Seguir el reloj del juego y el desfase horario solo afectan al tiempo meteorológico. Requiere los efectos de día y noche del juego." },
             { "label.SyncFog", "Sincronizar la niebla" },
             { "desc.SyncFog",
                 "Deduce la niebla de los códigos de niebla notificados y de la visibilidad. La " +
@@ -192,8 +194,7 @@
                 "el suelo, la humedad de las superficies y los eventos meteorológicos responden " +
                 "todos a la temperatura y a las precipitaciones, exactamente igual que responden al " +
                 "tiempo propio del juego.\n" +
-                "El mod no añade sistemas, no cambia reglas y no escribe nada en tu partida " +
-                "guardada.\n" +
+                "El mod no cambia ninguna regla de juego ni escribe nada en tu partida guardada.\n" +
                 "Desactivar «Sincronizar la temperatura» elimina la mayor parte de este efecto, a " +
                 "costa de la precisión entre lluvia y nieve. La producción solar y las aguas " +
                 "subterráneas no se ven afectadas nunca, y la niebla no influye en nada fuera de lo " +

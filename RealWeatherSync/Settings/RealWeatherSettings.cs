@@ -50,6 +50,7 @@ namespace RealWeatherSync.Settings
         private bool _syncFog = true;
         private bool _syncTemperature = true;
         private bool _syncAurora;
+        private bool _syncSunPosition;
         private bool _forceSnowAppearance = true;
         private bool _ignoreModConflicts;
         private bool _oppositeDay;
@@ -397,7 +398,7 @@ namespace RealWeatherSync.Settings
             "write, and parts of the game read those values back. Heating and cooling demand, building " +
             "upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and weather events " +
             "all respond to temperature and precipitation - exactly as they respond to the game's own weather.\n" +
-            "The mod adds no systems, changes no rules, and writes nothing into your save.\n" +
+            "The mod changes no gameplay rules and writes nothing into your save.\n" +
             "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
             "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog affects " +
             "nothing outside the visuals.";
@@ -481,6 +482,17 @@ namespace RealWeatherSync.Settings
         {
             get { return _syncAurora; }
             set { _syncAurora = value; }
+        }
+
+        /// <summary>
+        /// Opt-in visual override. The rendering system uses the selected location and current
+        /// UTC time; it never assigns PlanetarySystem time, date, latitude or longitude.
+        /// </summary>
+        [SettingsUISection(MainSection, AdvancedGroup)]
+        public bool SyncSunPosition
+        {
+            get { return _syncSunPosition; }
+            set { _syncSunPosition = value; }
         }
 
         [SettingsUISection(MainSection, AdvancedGroup)]
@@ -719,6 +731,7 @@ namespace RealWeatherSync.Settings
             _syncFog = true;
             _syncTemperature = true;
             _syncAurora = false;
+            _syncSunPosition = false;
             _forceSnowAppearance = true;
             _ignoreModConflicts = false;
             _oppositeDay = false;

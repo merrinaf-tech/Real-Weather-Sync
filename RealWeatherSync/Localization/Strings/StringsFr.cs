@@ -109,6 +109,8 @@
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchroniser les aurores avec la NOAA" },
             { "desc.SyncAurora", "Optionnel. Utilise les prévisions d'aurores de la NOAA pour le lieu météo. L'aurore apparaît uniquement lorsqu'il fait nuit à cet endroit et dans le jeu. Ce comportement reste actif avec le suivi de l'horloge du jeu; indisponible uniquement avec un décalage horaire manuel. Une prévision ne garantit pas une observation." },
+            { "label.SyncSunPosition", "Synchroniser la position réelle du soleil" },
+            { "desc.SyncSunPosition", "Optionnel et désactivé par défaut. Place le soleil affiché à sa position réelle actuelle au-dessus du lieu météo. La lumière et les ombres le suivent, sans modifier l'horloge, la date, la saison ni la sauvegarde. Le suivi de l'horloge du jeu et le décalage horaire ne concernent toujours que la météo. Nécessite l'affichage du cycle jour/nuit du jeu." },
             { "label.SyncFog", "Synchroniser le brouillard" },
             { "desc.SyncFog",
                 "Déduit le brouillard des codes de brouillard signalés et de la visibilité. La " +
@@ -191,8 +193,7 @@
                 "tourisme, neige au sol, humidité des surfaces et événements météo réagissent tous à " +
                 "la température et aux précipitations, exactement comme ils réagissent à la météo du " +
                 "jeu.\n" +
-                "Le mod n'ajoute aucun système, ne change aucune règle et n'écrit rien dans votre " +
-                "sauvegarde.\n" +
+                "Le mod ne change aucune règle de jeu et n'écrit rien dans votre sauvegarde.\n" +
                 "Désactiver « Synchroniser la température » en supprime la plus grande part, au prix " +
                 "de la justesse pluie/neige. La production solaire et les nappes phréatiques ne sont " +
                 "jamais affectées, et le brouillard n'agit que sur le rendu." },

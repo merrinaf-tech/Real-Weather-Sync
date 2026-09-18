@@ -170,6 +170,10 @@
 			<HintPath>$(ManagedPath)\UnityEngine.CoreModule.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
+		<Reference Include="Unity.RenderPipelines.HighDefinition.Runtime">
+			<HintPath>$(ManagedPath)\Unity.RenderPipelines.HighDefinition.Runtime.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
 		<Reference Include="Unity.InputSystem">
 			<HintPath>$(ManagedPath)\Unity.InputSystem.dll</HintPath>
 			<Private>false</Private>

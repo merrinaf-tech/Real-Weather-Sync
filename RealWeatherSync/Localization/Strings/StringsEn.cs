@@ -111,6 +111,8 @@ namespace RealWeatherSync.Localization.Strings
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchronise aurora with NOAA" },
             { "desc.SyncAurora", "Optional. Use NOAA's current aurora forecast for the weather location. Aurora appears only when the real location and the game are both at night. It keeps its current behaviour while following the game clock; unavailable only with a manual time shift. Forecasts do not guarantee a sighting." },
+            { "label.SyncSunPosition", "Synchronise the real sun position" },
+            { "desc.SyncSunPosition", "Optional and off by default. Place the rendered sun where it really is above the weather location right now. Daylight and shadows follow it, while the game clock, date, season and save remain untouched. Follow the in-game clock and Time shift still affect weather only. Requires the game's day/night visuals." },
             { "label.SyncFog", "Synchronise fog" },
             { "desc.SyncFog",
                 "Derive fog from the reported fog codes and from visibility. Cloud cover never produces fog. " +
@@ -186,7 +188,7 @@ namespace RealWeatherSync.Localization.Strings
                 "building upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and " +
                 "weather events all respond to temperature and precipitation - exactly as they respond to " +
                 "the game's own weather.\n" +
-                "The mod adds no systems, changes no rules, and writes nothing into your save.\n" +
+                "The mod changes no gameplay rules and writes nothing into your save.\n" +
                 "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
                 "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog " +
                 "affects nothing outside the visuals." },

@@ -108,6 +108,8 @@
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Sincronizza l'aurora con NOAA" },
             { "desc.SyncAurora", "Opzionale. Usa la previsione aurorale NOAA per la località meteo. L'aurora appare solo quando è notte sia lì sia nel gioco. Mantiene questo comportamento quando segue l'orologio del gioco; non è disponibile solo con uno spostamento orario manuale. La previsione non garantisce l'avvistamento." },
+            { "label.SyncSunPosition", "Sincronizza la posizione reale del sole" },
+            { "desc.SyncSunPosition", "Facoltativo e disattivato per impostazione predefinita. Posiziona il sole visibile dove si trova realmente in questo momento sopra il luogo del meteo. Luce e ombre lo seguono, mentre orologio, data, stagione e salvataggio restano invariati. Segui l'orologio del gioco e Sfasamento orario continuano a influire solo sul meteo. Richiede gli effetti giorno/notte del gioco." },
             { "label.SyncFog", "Sincronizza la nebbia" },
             { "desc.SyncFog",
                 "Ricava la nebbia dai codici di nebbia segnalati e dalla visibilità. La copertura " +
@@ -191,7 +193,7 @@
                 "svago, turismo, neve al suolo, bagnato delle superfici ed eventi meteo rispondono " +
                 "tutti a temperatura e precipitazioni, esattamente come rispondono al meteo del " +
                 "gioco.\n" +
-                "La mod non aggiunge sistemi, non cambia regole e non scrive nulla nel salvataggio.\n" +
+                "La mod non cambia le regole di gioco e non scrive nulla nel salvataggio.\n" +
                 "Disattivare \"Sincronizza la temperatura\" elimina la parte più consistente di " +
                 "questo effetto, al prezzo della precisione tra pioggia e neve. Resa solare e falda " +
                 "acquifera non vengono mai toccate, e la nebbia non influisce su nulla al di fuori " +

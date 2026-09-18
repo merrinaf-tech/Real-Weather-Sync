@@ -6,6 +6,7 @@ using Colossal.IO.AssetDatabase;
 using Colossal.Logging;
 using Game;
 using Game.Modding;
+using Game.Rendering;
 using Game.SceneFlow;
 using RealWeatherSync.Diagnostics;
 using RealWeatherSync.Localization;
@@ -21,8 +22,9 @@ namespace RealWeatherSync
     ///
     /// It overrides four weather values - temperature, cloudiness, precipitation
     /// and fog - and can optionally sync aurora to NOAA's current forecast.
-    /// It writes nothing else: not the clock, the date, the season, the day/night cycle,
-    /// or anything serialised into a save.
+    /// Optional real-sun sync also replaces the rendered sun transform for the current frame.
+    /// It does not assign the clock, date, season, planetary coordinates or anything serialised
+    /// into a save.
     ///
     /// It is NOT true that this leaves the simulation untouched, and that claim must not
     /// be reinstated. Overridden properties are returned by
@@ -110,6 +112,9 @@ namespace RealWeatherSync
             }
 
             updateSystem.UpdateAt<RealWeatherSystem>(SystemUpdatePhase.MainLoop);
+            // PlanetarySystem writes the normal light first; RealSunSystem replaces only the
+            // rendered sun, then LightingSystem consumes that transform for this frame.
+            updateSystem.UpdateBefore<RealSunSystem, LightingSystem>(SystemUpdatePhase.PreCulling);
 
             _ready = true;
             Log.Info("Real Weather Sync loaded.");

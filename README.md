@@ -5,8 +5,8 @@ city you choose. Type `Lyon`, press **Apply City**, and the game's sky, temperat
 fog follow Lyon's actual conditions.
 
 **The core weather sync writes four climate values — but the game reads them back.** Optional
-NOAA aurora sync also writes `aurora` when enabled. The mod never
-touches the clock, the date, the season or your save. See
+NOAA aurora sync also writes `aurora` when enabled. Optional real-sun sync replaces the rendered
+sun transform each frame. The mod never changes the clock, the date, the season or your save. See
 [What the game reads back](#what-the-game-reads-back).
 
 ---
@@ -21,6 +21,7 @@ touches the clock, the date, the season or your save. See
   - `precipitation`
   - `fog`
 - Optionally uses NOAA's current OVATION forecast to drive the game's aurora at night.
+- Optionally positions the rendered sun where it currently is above the weather location.
 - Fades smoothly between readings over about two minutes of **real** time.
 - Releases every override the moment you disable the mod, reset it, leave to the menu, or the mod
   is unloaded.
@@ -31,13 +32,14 @@ touches the clock, the date, the season or your save. See
 It does not write, and contains no code that could write:
 
 - thunder, lightning, rainbows, hail or wind;
-- the game clock, the date, the season or the day/night cycle (`PlanetarySystem.time` is *read*
-  by the follow-the-clock mode, never assigned);
+- the game clock, the date or the season (`PlanetarySystem.time` is *read* by the
+  follow-the-clock mode, never assigned);
 - the in-game planet's latitude / longitude;
 - savegame data - nothing this mod produces is serialised into a city save.
 
-The only game state it writes is `overrideValue` / `overrideState` for those four weather
-properties and, if enabled, `aurora`.
+The only simulation state it writes is `overrideValue` / `overrideState` for those four weather
+properties and, if enabled, `aurora`. Real-sun sync changes the rendered sunlight and shadows
+after the game has calculated them, then the game recreates its normal sun on the next frame.
 
 ## What the game reads back
 
@@ -75,8 +77,8 @@ for aurora triggers and weather selection. It is not a rendering-only input.
 `SoilWaterSystem` (groundwater), and `LeisureSystem`'s precipitation input. **Fog is read by
 nothing outside rendering**, which makes it the safest value to drive.
 
-The mod adds no systems and changes no rules — it feeds the ones that already exist, exactly as
-the game's own weather does. Switching off **Synchronise temperature** removes 8 of the 10
+The mod changes no gameplay rules — it feeds the game's existing systems exactly as its own
+weather does. Switching off **Synchronise temperature** removes 8 of the 10
 couplings; the precipitation ones remain, because there is no way to show weather without
 something reading it.
 
@@ -156,6 +158,7 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 | **Synchronise temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
 | **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
 | **Synchronise aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. It keeps using the current forecast while Follow the in-game clock selects historical weather; unavailable only with a manual time shift. The forecast does not guarantee a sighting. |
+| **Synchronise the real sun position** | off | Put the rendered sun at its current astronomical position above the weather location. Daylight and shadows follow it; the game clock, date, season and save do not change. Requires the game's day/night visuals. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
 
@@ -197,6 +200,10 @@ greyed out) while this mode is on, as is the manual time shift.
 stay exactly as the game set them — the mod just asks what time it is to decide which weather to
 show. This costs no extra network traffic: the hourly series already comes back with the request
 the mod was making anyway.
+
+If **Synchronise the real sun position** is also enabled, the weather still follows the in-game
+hour but the visible sunlight follows the real current moment at the selected location. The game
+clock itself remains unchanged, so its displayed hour can differ from the visible time of day.
 
 ### The normal workflow
 
@@ -333,7 +340,8 @@ code alone.
 ### Deliberately not controlled
 
 Thunder, lightning, rainbow, hail, wind, disasters, season, date, game time, and the
-planet's latitude / longitude. Aurora is written only when its separate NOAA option is enabled.
+planet's latitude / longitude. Aurora and the rendered sun are controlled only when their
+separate options are enabled.
 
 ---
 
@@ -761,6 +769,10 @@ ever regression-test.
       current-only aurora forecast. Record any exception in the mod log.
 - [ ] F2h. Enable **Follow the in-game clock** and confirm the weather follows the game hour while
       the aurora keeps using NOAA's current forecast and its real-location/game-night checks.
+- [ ] F2i. Enable **Synchronise the real sun position** and compare the visible sun direction,
+      sunrise/sunset and shadows with the selected location's current local time. Confirm the
+      displayed game clock, date and season do not move. Test it together with **Follow the
+      in-game clock**, then disable it and confirm the game's normal sun returns immediately.
 - [x] F2g. Confirm an aurora actually appears in game with the NOAA option enabled at a
       suitable location. **Author test, 2026-09-17:** aurora visible in game.
 

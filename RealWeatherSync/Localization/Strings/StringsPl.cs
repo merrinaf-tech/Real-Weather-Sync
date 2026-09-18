@@ -110,6 +110,8 @@
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchronizuj zorzę z NOAA" },
             { "desc.SyncAurora", "Opcjonalne. Używa aktualnej prognozy zorzy NOAA dla lokalizacji pogody. Zorza pojawia się tylko wtedy, gdy tam i w grze jest noc. Zachowuje to działanie podczas śledzenia zegara gry; niedostępne tylko przy ręcznym przesunięciu czasu. Prognoza nie gwarantuje obserwacji." },
+            { "label.SyncSunPosition", "Synchronizuj rzeczywistą pozycję słońca" },
+            { "desc.SyncSunPosition", "Opcjonalne i domyślnie wyłączone. Umieszcza widoczne słońce w jego aktualnej rzeczywistej pozycji nad lokalizacją pogody. Światło i cienie podążają za nim, a zegar gry, data, pora roku i zapis pozostają bez zmian. Śledzenie zegara gry i przesunięcie czasu nadal dotyczą tylko pogody. Wymaga włączonego cyklu dnia i nocy w grze." },
             { "label.SyncFog", "Synchronizuj mgłę" },
             { "desc.SyncFog",
                 "Wyprowadza mgłę z raportowanych kodów mgły oraz z widzialności. Zachmurzenie nigdy " +
@@ -192,8 +194,7 @@
                 "pożaru, rozrywka, turystyka, śnieg na ziemi, wilgoć powierzchni oraz zdarzenia " +
                 "pogodowe - wszystko to reaguje na temperaturę i opady dokładnie tak samo, jak " +
                 "reaguje na własną pogodę gry.\n" +
-                "Mod nie dodaje żadnych systemów, nie zmienia żadnych zasad i nie zapisuje niczego " +
-                "w Twoim stanie gry.\n" +
+                "Mod nie zmienia zasad rozgrywki i nie zapisuje niczego w Twoim stanie gry.\n" +
                 "Wyłączenie opcji „Synchronizuj temperaturę” usuwa największą część tego wpływu, " +
                 "kosztem dokładności rozróżniania deszczu i śniegu. Produkcja energii słonecznej i " +
                 "wody gruntowe nigdy nie są dotknięte, a mgła nie wpływa na nic poza obrazem." },

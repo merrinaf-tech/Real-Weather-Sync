@@ -108,6 +108,8 @@
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Sincronizar auroras com a NOAA" },
             { "desc.SyncAurora", "Opcional. Usa a previsão atual de auroras da NOAA para o local do clima. A aurora aparece apenas quando é noite lá e no jogo. Mantém esse comportamento ao seguir o relógio do jogo; indisponível apenas com deslocamento manual de horário. A previsão não garante a observação." },
+            { "label.SyncSunPosition", "Sincronizar a posição real do sol" },
+            { "desc.SyncSunPosition", "Opcional e desativado por padrão. Coloca o sol visível na posição real atual sobre o local do clima. A luz e as sombras o acompanham, sem alterar o relógio, a data, a estação ou o jogo salvo. Seguir o relógio do jogo e o deslocamento de tempo continuam afetando somente o clima. Requer os efeitos de dia e noite do jogo." },
             { "label.SyncFog", "Sincronizar neblina" },
             { "desc.SyncFog",
                 "Deriva a neblina dos códigos de neblina informados e da visibilidade. A cobertura " +
@@ -190,7 +192,7 @@
                 "incêndio, lazer, turismo, neve no chão, umidade das superfícies e eventos " +
                 "climáticos respondem todos à temperatura e à precipitação - exatamente como " +
                 "respondem ao clima do próprio jogo.\n" +
-                "O mod não acrescenta sistemas, não muda regras e não grava nada no seu save.\n" +
+                "O mod não muda regras de jogo e não grava nada no seu save.\n" +
                 "Desativar \"Sincronizar temperatura\" remove a maior parte disso, ao custo da " +
                 "precisão entre chuva e neve. Geração solar e água subterrânea nunca são afetadas, " +
                 "e a neblina não influencia nada além do visual." },

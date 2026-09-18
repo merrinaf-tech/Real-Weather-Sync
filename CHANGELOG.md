@@ -9,6 +9,10 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 - Aurora sync now keeps its current NOAA behaviour while weather follows the in-game clock.
 
+### Added
+
+- Optional real sun-position sync, without changing the game clock, calendar or save.
+
 ## [1.5.0] - 2026-09-17
 
 ### Added
