@@ -55,6 +55,7 @@
 	<ItemGroup>
 		<Compile Include="$(ModRoot)\Models\ClimateTarget.cs" />
 		<Compile Include="$(ModRoot)\Models\AuroraForecast.cs" />
+		<Compile Include="$(ModRoot)\Models\AuroraSyncPolicy.cs" />
 		<Compile Include="$(ModRoot)\Models\SolarNight.cs" />
 		<Compile Include="$(ModRoot)\Models\WeatherSnapshot.cs" />
 		<Compile Include="$(ModRoot)\Models\WeatherTimeline.cs" />

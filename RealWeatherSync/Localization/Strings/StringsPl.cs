@@ -109,7 +109,7 @@
 
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchronizuj zorzę z NOAA" },
-            { "desc.SyncAurora", "Opcjonalne. Używa aktualnej prognozy zorzy NOAA dla lokalizacji pogody. Zorza pojawia się tylko wtedy, gdy tam i w grze jest noc. Niedostępne przy przesunięciu czasu i śledzeniu zegara gry. Prognoza nie gwarantuje obserwacji." },
+            { "desc.SyncAurora", "Opcjonalne. Używa aktualnej prognozy zorzy NOAA dla lokalizacji pogody. Zorza pojawia się tylko wtedy, gdy tam i w grze jest noc. Zachowuje to działanie podczas śledzenia zegara gry; niedostępne tylko przy ręcznym przesunięciu czasu. Prognoza nie gwarantuje obserwacji." },
             { "label.SyncFog", "Synchronizuj mgłę" },
             { "desc.SyncFog",
                 "Wyprowadza mgłę z raportowanych kodów mgły oraz z widzialności. Zachmurzenie nigdy " +

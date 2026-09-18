@@ -110,7 +110,7 @@ namespace RealWeatherSync.Localization.Strings
 
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchronise aurora with NOAA" },
-            { "desc.SyncAurora", "Optional. Use NOAA's current aurora forecast for the weather location. Aurora appears only when the real location and the game are both at night. Unavailable during time shift and follow-the-game-clock modes. Forecasts do not guarantee a sighting." },
+            { "desc.SyncAurora", "Optional. Use NOAA's current aurora forecast for the weather location. Aurora appears only when the real location and the game are both at night. It keeps its current behaviour while following the game clock; unavailable only with a manual time shift. Forecasts do not guarantee a sighting." },
             { "label.SyncFog", "Synchronise fog" },
             { "desc.SyncFog",
                 "Derive fog from the reported fog codes and from visibility. Cloud cover never produces fog. " +

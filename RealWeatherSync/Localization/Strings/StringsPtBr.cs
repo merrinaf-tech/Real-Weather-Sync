@@ -107,7 +107,7 @@
 
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Sincronizar auroras com a NOAA" },
-            { "desc.SyncAurora", "Opcional. Usa a previsão atual de auroras da NOAA para o local do clima. A aurora aparece apenas quando é noite lá e no jogo. Indisponível com deslocamento de horário ou ao seguir o relógio do jogo. A previsão não garante a observação." },
+            { "desc.SyncAurora", "Opcional. Usa a previsão atual de auroras da NOAA para o local do clima. A aurora aparece apenas quando é noite lá e no jogo. Mantém esse comportamento ao seguir o relógio do jogo; indisponível apenas com deslocamento manual de horário. A previsão não garante a observação." },
             { "label.SyncFog", "Sincronizar neblina" },
             { "desc.SyncFog",
                 "Deriva a neblina dos códigos de neblina informados e da visibilidade. A cobertura " +

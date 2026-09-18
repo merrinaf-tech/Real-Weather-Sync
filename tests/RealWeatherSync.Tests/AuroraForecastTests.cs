@@ -32,6 +32,16 @@ namespace RealWeatherSync.Tests
             Assert.True("old forecast is rejected", !forecast.IsForMoment(now.AddHours(2)));
             Assert.True("future observation is rejected", !forecast.IsForMoment(now.AddHours(-1)));
 
+            Assert.Section("Aurora mode policy");
+            Assert.True("disabled option does not run",
+                !AuroraSyncPolicy.ShouldRun(false, false, 0));
+            Assert.True("current weather mode runs",
+                AuroraSyncPolicy.ShouldRun(true, false, 0));
+            Assert.True("manual time shift suspends current-only forecast",
+                !AuroraSyncPolicy.ShouldRun(true, false, 6));
+            Assert.True("game-clock mode keeps current aurora despite saved shift",
+                AuroraSyncPolicy.ShouldRun(true, true, 6));
+
             Assert.Section("Real-location darkness");
             Assert.True("equator at equinox noon is daylight",
                 !SolarNight.IsDark(0, 0, new DateTimeOffset(2026, 3, 20, 12, 0, 0, TimeSpan.Zero)));

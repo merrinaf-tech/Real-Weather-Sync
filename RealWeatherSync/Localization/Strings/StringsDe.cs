@@ -110,7 +110,7 @@
 
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Polarlichter mit NOAA synchronisieren" },
-            { "desc.SyncAurora", "Optional. Verwendet die aktuelle NOAA-Polarlichtvorhersage für den Wetterort. Polarlichter erscheinen nur, wenn es dort und im Spiel Nacht ist. Nicht verfügbar bei Zeitverschiebung oder Spieluhrmodus. Eine Vorhersage garantiert keine Sichtung." },
+            { "desc.SyncAurora", "Optional. Verwendet die aktuelle NOAA-Polarlichtvorhersage für den Wetterort. Polarlichter erscheinen nur, wenn es dort und im Spiel Nacht ist. Im Spieluhrmodus bleibt dieses Verhalten erhalten; nur bei manueller Zeitverschiebung nicht verfügbar. Eine Vorhersage garantiert keine Sichtung." },
             { "label.SyncFog", "Nebel synchronisieren" },
             { "desc.SyncFog",
                 "Leitet Nebel aus den gemeldeten Nebelcodes und aus der Sichtweite ab. Bewölkung " +

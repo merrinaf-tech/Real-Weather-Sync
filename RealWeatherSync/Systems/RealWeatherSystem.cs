@@ -276,7 +276,11 @@ namespace RealWeatherSync.Systems
 
         private void UpdateAurora(RealWeatherSettings settings, WeatherCoordinator coordinator)
         {
-            if (!settings.SyncAurora || settings.FollowGameClock || settings.TimeShiftHours != 0)
+            // Follow-the-game-clock changes which weather sample is displayed, but the aurora
+            // deliberately keeps its current-only behaviour. A saved manual time shift is
+            // ignored while clock-following is active, just as it is for the weather request.
+            if (!AuroraSyncPolicy.ShouldRun(
+                    settings.SyncAurora, settings.FollowGameClock, settings.TimeShiftHours))
             {
                 _controller.ReleaseAurora();
                 return;

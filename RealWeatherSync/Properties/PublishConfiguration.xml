@@ -42,7 +42,7 @@ The weather slides continuously between hours, so nothing ever jumps. And the in
 - **Search** shows region, country and coordinates, so you pick the right Springfield. Cities you have used before are one click away.
 - **Offline-proof** - it holds the last good reading instead of dumping you into a cloudless void.
 - **Real snow.** The game picks rain or snow from temperature, so the mod nudges it below freezing when the city is genuinely under snow. Optional.
-- **NOAA aurora forecast.** Optional and off by default. Shown only when the selected weather location and the game are both at night; disabled with time shift and follow-the-clock mode.
+- **NOAA aurora forecast.** Optional and off by default. Shown only when the selected weather location and the game are both at night. It keeps using the current forecast in follow-the-clock mode; disabled only by a manual time shift.
 - Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
 
 ## And it actually matters

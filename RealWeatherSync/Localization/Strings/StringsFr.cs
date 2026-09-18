@@ -108,7 +108,7 @@
 
             // -- Advanced -----------------------------------------------------------
             { "label.SyncAurora", "Synchroniser les aurores avec la NOAA" },
-            { "desc.SyncAurora", "Optionnel. Utilise les prévisions d'aurores de la NOAA pour le lieu météo. L'aurore apparaît uniquement lorsqu'il fait nuit à cet endroit et dans le jeu. Indisponible avec le décalage horaire ou le suivi de l'horloge du jeu. Une prévision ne garantit pas une observation." },
+            { "desc.SyncAurora", "Optionnel. Utilise les prévisions d'aurores de la NOAA pour le lieu météo. L'aurore apparaît uniquement lorsqu'il fait nuit à cet endroit et dans le jeu. Ce comportement reste actif avec le suivi de l'horloge du jeu; indisponible uniquement avec un décalage horaire manuel. Une prévision ne garantit pas une observation." },
             { "label.SyncFog", "Synchroniser le brouillard" },
             { "desc.SyncFog",
                 "Déduit le brouillard des codes de brouillard signalés et de la visibilité. La " +

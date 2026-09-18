@@ -3,6 +3,12 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Aurora sync now keeps its current NOAA behaviour while weather follows the in-game clock.
+
 ## [1.5.0] - 2026-09-17
 
 ### Added

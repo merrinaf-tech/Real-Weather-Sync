@@ -155,7 +155,7 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 |---|---|---|
 | **Synchronise temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
 | **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
-| **Synchronise aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. Unavailable with time shift or Follow the in-game clock. The forecast does not guarantee a sighting. |
+| **Synchronise aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. It keeps using the current forecast while Follow the in-game clock selects historical weather; unavailable only with a manual time shift. The forecast does not guarantee a sighting. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
 
@@ -750,15 +750,17 @@ ever regression-test.
 - [ ] F2b. Confirm **Show snow when it is really snowing** greys out while it is off.
 - [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
 - [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
-- [ ] F2e. Confirm **Synchronise aurora with NOAA** is off by default. Turn off **Time shift**
-      and **Follow the in-game clock**, choose a high-latitude location, and enable aurora.
+- [ ] F2e. Confirm **Synchronise aurora with NOAA** is off by default. Set **Time shift** to zero,
+      choose a high-latitude location, and enable aurora.
       It must be dark at the real location and in the game. Note the NOAA grid's **Forecast
       Time** and compare only when that time arrives (the first usable forecast can take
       30–90 minutes). No aurora is expected when NOAA predicts none at the location.
 - [ ] F2f. If an aurora is forecast, check whether clouds obscure it or it appears in front of
       them. Disable the aurora option, reset the mod, and return to the menu; confirm its
-      override is released each time. Check that **Time shift** and **Follow the in-game
-      clock** suspend NOAA's current-only aurora forecast. Record any exception in the mod log.
+      override is released each time. Check that a manual **Time shift** suspends NOAA's
+      current-only aurora forecast. Record any exception in the mod log.
+- [ ] F2h. Enable **Follow the in-game clock** and confirm the weather follows the game hour while
+      the aurora keeps using NOAA's current forecast and its real-location/game-night checks.
 - [x] F2g. Confirm an aurora actually appears in game with the NOAA option enabled at a
       suitable location. **Author test, 2026-09-17:** aurora visible in game.
 
