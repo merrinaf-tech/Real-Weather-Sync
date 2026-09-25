@@ -43,6 +43,7 @@ The weather slides continuously between hours, so nothing ever jumps. And the in
 - **Offline-proof** - it holds the last good reading instead of dumping you into a cloudless void.
 - **Real snow.** The game picks rain or snow from temperature, so the mod nudges it below freezing when the city is genuinely under snow. Optional.
 - **NOAA aurora forecast.** Optional and off by default. Shown only when the selected weather location and the game are both at night. It keeps using the current forecast in follow-the-clock mode; disabled only by a manual time shift.
+- **No tornadoes out of nowhere.** Optional and off by default: hold the game's weather events back unless the real city is actually having a thunderstorm.
 - **Real sun position.** Optional and off by default. Daylight and shadows follow the sun's current astronomical position above the weather location, without changing the game clock, date, season or save.
 - Powered by [Open-Meteo](https://open-meteo.com/): no account, no sign-up, no API key.
 
@@ -54,13 +55,13 @@ The mod writes the same four climate values the game's own weather tools write -
 - **Fire risk** follows temperature and rain
 - **Tourism** and **leisure** follow both
 - **Snow settles** on the ground, **surfaces get wet**
-- **Weather events** can be influenced - only if you have natural disasters switched on
+- **Weather events** can be influenced - only if you have natural disasters switched on, and an option can hold them back unless the real city is under a thunderstorm
 
 When enabled, the aurora override can also affect the game's own aurora triggers and weather selection.
 
 Solar output and groundwater are never affected, and fog changes nothing but the view.
 
-To reduce simulation effects, switch off **Synchronise temperature** in Advanced. Rain and cloudiness can still affect some systems.
+To reduce simulation effects, switch off **Sync temperature** in Advanced. Rain and cloudiness can still affect some systems.
 
 It changes no gameplay rules, never moves the clock, date or season, and writes **nothing** into your save.
 
@@ -126,7 +127,7 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/fabiozsche" />
 
-	<ModVersion Value="1.5.0" />
+	<ModVersion Value="1.6.0" />
 
 	<!-- Built and verified against game build 1.6.2f1. -->
 	<GameVersion Value="1.6.*" />
@@ -150,8 +151,14 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 		CHANGELOG.md carry the history, or the next release will fail at upload time.
 	-->
 	<ChangeLog>
-# 1.5.0
+# 1.6.0
 
-- Added optional NOAA aurora sync, off by default and active only when both locations are at night.
+- New option: **Limit weather events to real storms**, off by default. While real weather is driving your city, the game's weather events - tornadoes, hail storms, lightning strikes - are held back unless the real city is genuinely having a thunderstorm. It pauses the generator and never creates an event, so nothing is written to your save.
+- The advanced options now sit behind the game's own **Show Advanced** switch, so the page opens short.
+- Clearer names: *Enable Real Weather Sync*, *Sync last 24h with in-game clock*, and *Synchronise* shortened to *Sync*.
+- The city field now shows the name that was resolved: searching "meyzie" leaves "Meyzieu" in the box.
+- The four action buttons are laid out two per row.
+- Fixed: the *Current weather* and *About* blocks were blank in game and now show their text.
+- Removed: the *What the game reads back* note. It had never actually rendered - the same information is in this listing and in the README.
 	</ChangeLog>
 </Publish>
