@@ -20,14 +20,14 @@
             { "group.AboutGroup", "Acerca de" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Activar el tiempo real" },
+            { "label.EnableRealWeather", "Activar Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Ajusta el tiempo visible de tu ciudad al tiempo real actual de la ciudad elegida " +
                 "abajo. El reloj, la fecha y la estación nunca se modifican, pero el juego sí vuelve " +
                 "a leer los valores meteorológicos: consulta «Qué vuelve a leer el juego» en " +
                 "Avanzado. Al desactivarlo, el tiempo vuelve de inmediato al control del juego." },
 
-            { "label.FollowGameClock", "Seguir el reloj del juego" },
+            { "label.FollowGameClock", "Sincronizar las últimas 24 h con el reloj del juego" },
             { "desc.FollowGameClock",
                 "En lugar de una única lectura fija, recorre las últimas 24 horas de tiempo real de " +
                 "la ciudad elegida siguiendo la hora del juego. Si en tu ciudad son las 15:00, " +
@@ -124,7 +124,6 @@
                 "mod. El precio es que el juego ya no distingue la lluvia de la nieve, y la " +
                 "temperatura que ves es la del propio juego." },
 
-            { "label.SimulationImpactNote", "Qué vuelve a leer el juego" },
 
             { "label.ForceSnowAppearance", "Mostrar nieve cuando de verdad nieva" },
             { "desc.ForceSnowAppearance",
@@ -133,6 +132,10 @@
                 "la temperatura visible baja justo por debajo de cero para que se dibuje la nieve. " +
                 "La temperatura mostrada diferirá entonces de la real. La estación y la fecha siguen " +
                 "sin modificarse nunca." },
+
+            { "label.LimitWeatherEvents", "Limitar los fenómenos meteorológicos a tormentas reales" },
+            { "desc.LimitWeatherEvents",
+                "Desactivado por defecto. Mientras el tiempo real controla tu ciudad, se retiene el generador de fenómenos meteorológicos del juego - tornados, granizadas, rayos - salvo que la ciudad real esté realmente bajo una tormenta eléctrica. El juego elige esos fenómenos solo a partir de la temperatura, la lluvia y la nubosidad, así que sin esta opción un día real en calma puede generar un tornado. Solo pausa el generador, no crea nada: no se escribe nada en tu partida guardada y, al desactivarla, el juego lo recupera de inmediato. Mientras está activa también se retienen los fenómenos que el juego habría creado por su cuenta: no hay forma de distinguirlos." },
 
             { "label.IgnoreModConflicts", "Ignorar conflictos entre mods" },
             { "desc.IgnoreModConflicts",
@@ -186,19 +189,6 @@
                 "A Open-Meteo solo se envían el nombre de ciudad que escribes y las coordenadas obtenidas a partir de él.\n" +
                 "La sincronización opcional de auroras descarga el pronóstico global de NOAA sin enviar tu ubicación." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync escribe los mismos cuatro valores climáticos que escriben las " +
-                "herramientas meteorológicas de desarrollo del propio juego, y parte del juego " +
-                "vuelve a leer esos valores. La demanda de calefacción y refrigeración, el " +
-                "mantenimiento de edificios, el riesgo de incendio, el ocio, el turismo, la nieve en " +
-                "el suelo, la humedad de las superficies y los eventos meteorológicos responden " +
-                "todos a la temperatura y a las precipitaciones, exactamente igual que responden al " +
-                "tiempo propio del juego.\n" +
-                "El mod no cambia ninguna regla de juego ni escribe nada en tu partida guardada.\n" +
-                "Desactivar «Sincronizar la temperatura» elimina la mayor parte de este efecto, a " +
-                "costa de la precisión entre lluvia y nieve. La producción solar y las aguas " +
-                "subterráneas no se ven afectadas nunca, y la niebla no influye en nada fuera de lo " +
-                "visual." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Desactivado" },

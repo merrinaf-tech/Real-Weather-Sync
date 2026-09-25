@@ -43,6 +43,10 @@ after the game has calculated them, then the game recreates its normal sun on th
 
 ## What the game reads back
 
+This section is where the disclosure lives. It is not repeated in the options page: the note that
+used to sit there was removed in 1.6.0, after it turned out the game's multiline widget never drew
+it. See the changelog entry for the detail.
+
 **Versions up to 1.2.0 claimed this mod did not affect the simulation. That was wrong.** The
 claim has been retracted; this section replaces it.
 
@@ -70,6 +74,24 @@ precipitation, so systems reading only those flags are affected too.
 `CityConfigurationSystem.naturalDisasters` — a city with natural disasters switched off is not
 exposed to that one.
 
+### Limit weather events to real storms
+
+Off by default, in Advanced.
+
+The game picks tornadoes, hail storms and lightning strikes from temperature, rain and cloudiness
+alone, compared against each phenomenon's occurrence window. It has no idea those numbers came
+from a real city, so a calm real day whose values happen to land in the tornado window produces a
+tornado over a city whose real counterpart has never had one.
+
+With this on, the mod holds `WeatherHazardSystem` off while it is driving the weather, and lets it
+run only when the real city is genuinely under a thunderstorm — WMO codes 95, 96 and 99, which the
+mod already receives. It pauses the generator, it never creates anything: nothing reaches your
+save, and turning the option off hands the generator straight back.
+
+Two honest limits. While it is on, the events the game would have produced by itself are held back
+too, because nothing can tell them apart. And it grants permission rather than forcing an event: a
+real thunderstorm lets the game roll, it does not guarantee anything will happen.
+
 When the optional aurora override is enabled, the game's `ClimateSystem` also reads that value
 for aurora triggers and weather selection. It is not a rendering-only input.
 
@@ -78,7 +100,7 @@ for aurora triggers and weather selection. It is not a rendering-only input.
 nothing outside rendering**, which makes it the safest value to drive.
 
 The mod changes no gameplay rules — it feeds the game's existing systems exactly as its own
-weather does. Switching off **Synchronise temperature** removes 8 of the 10
+weather does. Switching off **Sync temperature** removes 8 of the 10
 couplings; the precipitation ones remain, because there is no way to show weather without
 something reading it.
 
@@ -116,8 +138,8 @@ Everything lives on one options page, **Options -> Real Weather Sync**.
 
 | Setting | Meaning |
 |---|---|
-| **Enable Real Weather** | Master switch. Turning it off hands the weather straight back to the game. |
-| **Follow the in-game clock** | Off by default. See [below](#following-the-in-game-clock). |
+| **Enable Real Weather Sync** | Master switch. Turning it off hands the weather straight back to the game. |
+| **Sync last 24h with in-game clock** | Off by default. See [below](#following-the-in-game-clock). |
 | **Smooth Weather Transitions** | Fade to each new reading instead of snapping. |
 | **Transition length** | 0–600 seconds of real time. Default 120. Disabled when smoothing is off. |
 | **Update Interval** | 15 / 30 / 60 minutes. Default 15. |
@@ -155,10 +177,10 @@ Possible statuses: *Disabled*, *City not configured*, *Resolving location*, *Ref
 
 | Setting | Default | Meaning |
 |---|---|---|
-| **Synchronise temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
-| **Synchronise fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
-| **Synchronise aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. It keeps using the current forecast while Follow the in-game clock selects historical weather; unavailable only with a manual time shift. The forecast does not guarantee a sighting. |
-| **Synchronise the real sun position** | off | Put the rendered sun at its current astronomical position above the weather location. Daylight and shadows follow it; the game clock, date, season and save do not change. Requires the game's day/night visuals. |
+| **Sync temperature** | on | Drive the visual temperature from the real city. Temperature is what most game systems read back — see [What the game reads back](#what-the-game-reads-back) — so turning it off is the most effective way to keep the mod's influence minimal. Cost: the game can no longer tell rain from snow. |
+| **Sync fog** | on | Derive fog from fog weather codes and visibility. Turn off to leave the game's fog alone. |
+| **Sync aurora with NOAA** | off | Fetch NOAA's current OVATION forecast. Show aurora only when the real weather location and the game are both at night. It keeps using the current forecast while Sync last 24h with in-game clock selects historical weather; unavailable only with a manual time shift. The forecast does not guarantee a sighting. |
+| **Sync the real sun position** | off | Put the rendered sun at its current astronomical position above the weather location. Daylight and shadows follow it; the game clock, date, season and save do not change. Requires the game's day/night visuals. |
 | **Show snow when it is really snowing** | on | See [Snow](#snow-and-its-one-unavoidable-compromise) below. |
 | **Ignore mod conflicts** | off | Skip the other-weather-mod check. See [Compatibility](#compatibility). |
 
@@ -184,7 +206,7 @@ produce still feeds the simulation exactly like any other weather — see
 Normally the mod shows the city's weather **right now**: one reading, refreshed every 15–60
 minutes.
 
-With **Follow the in-game clock** enabled it instead walks the city's **last 24 hours** of real
+With **Sync last 24h with in-game clock** enabled it instead walks the city's **last 24 hours** of real
 weather, using your in-game hour to choose which one:
 
 > It is 10:00 in the real world and 15:00 in your city → you get the weather the chosen city
@@ -201,7 +223,7 @@ stay exactly as the game set them — the mod just asks what time it is to decid
 show. This costs no extra network traffic: the hourly series already comes back with the request
 the mod was making anyway.
 
-If **Synchronise the real sun position** is also enabled, the weather still follows the in-game
+If **Sync the real sun position** is also enabled, the weather still follows the in-game
 hour but the visible sunlight follows the real current moment at the selected location. The game
 clock itself remains unchanged, so its displayed hour can differ from the visible time of day.
 
@@ -339,9 +361,15 @@ code alone.
 
 ### Deliberately not controlled
 
-Thunder, lightning, rainbow, hail, wind, disasters, season, date, game time, and the
-planet's latitude / longitude. Aurora and the rendered sun are controlled only when their
-separate options are enabled.
+Thunder, lightning, rainbow, hail, wind, season, date, game time, and the planet's latitude /
+longitude. Aurora and the rendered sun are controlled only when their separate options are
+enabled.
+
+Disasters are never *created*. The mod cannot start a tornado, a hail storm or a lightning strike,
+and it never will: those events are written into your save, and the damage they do cannot be
+undone by switching the mod off.
+
+What it can do, only when you ask for it, is *withhold permission*. See below.
 
 ---
 
@@ -391,7 +419,7 @@ The weather service receives only:
 2. **The latitude and longitude** that lookup returned, sent to
    `https://api.open-meteo.com/v1/forecast` on each refresh.
 
-If you enable **Synchronise aurora with NOAA**, the mod also downloads the global OVATION grid
+If you enable **Sync aurora with NOAA**, the mod also downloads the global OVATION grid
 from `https://services.swpc.noaa.gov/json/ovation_aurora_latest.json` every 15 minutes while
 active. No city name or coordinates are included in that request. No telemetry or analytics are
 sent. The city name and coordinates are also written to the mod's local log for diagnostics.
@@ -729,7 +757,7 @@ ever regression-test.
 - [ ] D5. Turn smoothing off; confirm the slider greys out and changes are instant.
 - [ ] D6. Press **Apply Immediately** mid-transition; confirm it snaps to the new weather at once.
 
-### E. Follow the in-game clock
+### E. Sync last 24h with in-game clock
 
 - [ ] E1. Turn it on; confirm the transition slider and **Time shift** both grey out.
 - [ ] E2. Let the in-game clock run; confirm the weather **changes with the hour** and moves
@@ -753,12 +781,11 @@ ever regression-test.
 
 ### F2. Simulation impact (1.3.0)
 
-- [ ] F2a. Turn **Synchronise temperature** off; confirm the in-game temperature returns to the
+- [ ] F2a. Turn **Sync temperature** off; confirm the in-game temperature returns to the
       game's own while clouds, rain and fog still follow the real city.
 - [ ] F2b. Confirm **Show snow when it is really snowing** greys out while it is off.
 - [ ] F2c. Turn it back on; confirm the temperature override returns without a restart.
-- [ ] F2d. Confirm the **What the game reads back** note is visible in the Advanced options.
-- [ ] F2e. Confirm **Synchronise aurora with NOAA** is off by default. Set **Time shift** to zero,
+- [ ] F2e. Confirm **Sync aurora with NOAA** is off by default. Set **Time shift** to zero,
       choose a high-latitude location, and enable aurora.
       It must be dark at the real location and in the game. Note the NOAA grid's **Forecast
       Time** and compare only when that time arrives (the first usable forecast can take
@@ -767,9 +794,9 @@ ever regression-test.
       them. Disable the aurora option, reset the mod, and return to the menu; confirm its
       override is released each time. Check that a manual **Time shift** suspends NOAA's
       current-only aurora forecast. Record any exception in the mod log.
-- [ ] F2h. Enable **Follow the in-game clock** and confirm the weather follows the game hour while
+- [ ] F2h. Enable **Sync last 24h with in-game clock** and confirm the weather follows the game hour while
       the aurora keeps using NOAA's current forecast and its real-location/game-night checks.
-- [ ] F2i. Enable **Synchronise the real sun position** and compare the visible sun direction,
+- [ ] F2i. Enable **Sync the real sun position** and compare the visible sun direction,
       sunrise/sunset and shadows with the selected location's current local time. Confirm the
       displayed game clock, date and season do not move. Test it together with **Follow the
       in-game clock**, then disable it and confirm the game's normal sun returns immediately.
@@ -797,7 +824,7 @@ ever regression-test.
 
 ### Snow accumulation
 
-- [x] X1. **Snow accumulation.** With **Synchronise temperature** and **Show snow when it is
+- [x] X1. **Snow accumulation.** With **Sync temperature** and **Show snow when it is
       really snowing** on, choose a location whose *Current weather* block actually says snow
       (a preset alone does not guarantee it). Keep the simulation running until snow is visible
       on the ground; record a screenshot. Switch to a warm, dry location such as Death Valley,

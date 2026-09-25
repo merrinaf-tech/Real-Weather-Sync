@@ -20,14 +20,14 @@
             { "group.AboutGroup", "Informazioni" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Attiva il meteo reale" },
+            { "label.EnableRealWeather", "Attiva Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Allinea il meteo visibile della tua città al meteo reale attuale della città scelta " +
                 "qui sotto. Orologio, data e stagione non vengono mai modificati, ma il gioco legge " +
                 "davvero i valori meteo: vedi \"Cosa rilegge il gioco\" nella sezione Avanzate. " +
                 "Disattivando l'opzione il meteo torna subito sotto il controllo del gioco." },
 
-            { "label.FollowGameClock", "Segui l'orologio di gioco" },
+            { "label.FollowGameClock", "Sincronizza le ultime 24 h con l'orologio di gioco" },
             { "desc.FollowGameClock",
                 "Invece di un singolo valore fisso, percorre le ultime 24 ore di meteo reale della " +
                 "città scelta seguendo l'ora di gioco. Se nella tua città sono le 15:00, ottieni il " +
@@ -124,7 +124,6 @@
                 "che il gioco non distingue più la pioggia dalla neve, e la temperatura mostrata è " +
                 "quella del gioco." },
 
-            { "label.SimulationImpactNote", "Cosa rilegge il gioco" },
 
             { "label.ForceSnowAppearance", "Mostra la neve quando nevica davvero" },
             { "desc.ForceSnowAppearance",
@@ -133,6 +132,10 @@
                 "visibile viene abbassata appena sotto lo zero perché la neve venga disegnata. " +
                 "La temperatura mostrata risulterà quindi diversa da quella reale. Stagione e data " +
                 "restano comunque intoccate." },
+
+            { "label.LimitWeatherEvents", "Limita gli eventi meteo ai temporali reali" },
+            { "desc.LimitWeatherEvents",
+                "Disattivata di default. Mentre il meteo reale guida la tua città, il generatore di eventi meteo del gioco - tornado, grandinate, fulmini - viene trattenuto, a meno che nella città reale non ci sia davvero un temporale. Il gioco sceglie quegli eventi solo da temperatura, pioggia e nuvolosità, quindi senza questa opzione anche una giornata reale tranquilla può produrre un tornado. Mette in pausa il generatore senza creare nulla: non viene scritto niente nel salvataggio e disattivandola il gioco riprende subito il controllo. Finché è attiva vengono trattenuti anche gli eventi che il gioco avrebbe creato per conto suo: non c'è modo di distinguerli." },
 
             { "label.IgnoreModConflicts", "Ignora i conflitti tra mod" },
             { "desc.IgnoreModConflicts",
@@ -186,18 +189,6 @@
                 "A Open-Meteo vengono inviati soltanto il nome della città che digiti e le coordinate ricavate da esso.\n" +
                 "La sincronizzazione opzionale dell'aurora scarica la previsione globale NOAA senza inviare la tua posizione." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync scrive gli stessi quattro valori climatici che scrivono gli " +
-                "strumenti meteo di sviluppo del gioco, e una parte del gioco li rilegge. Fabbisogno " +
-                "di riscaldamento e raffrescamento, manutenzione degli edifici, rischio incendi, " +
-                "svago, turismo, neve al suolo, bagnato delle superfici ed eventi meteo rispondono " +
-                "tutti a temperatura e precipitazioni, esattamente come rispondono al meteo del " +
-                "gioco.\n" +
-                "La mod non cambia le regole di gioco e non scrive nulla nel salvataggio.\n" +
-                "Disattivare \"Sincronizza la temperatura\" elimina la parte più consistente di " +
-                "questo effetto, al prezzo della precisione tra pioggia e neve. Resa solare e falda " +
-                "acquifera non vengono mai toccate, e la nebbia non influisce su nulla al di fuori " +
-                "della resa visiva." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Disattivato" },

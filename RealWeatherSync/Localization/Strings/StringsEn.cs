@@ -26,14 +26,14 @@ namespace RealWeatherSync.Localization.Strings
             { "group.AboutGroup", "About" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Enable Real Weather" },
+            { "label.EnableRealWeather", "Enable Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Match the visual weather of your city to the current real weather of the city below. " +
                 "The clock, the date and the season are never changed - but the game does read the " +
                 "weather values back, so see \"What the game reads back\" under Advanced. " +
                 "Turning this off immediately hands the weather back to the game." },
 
-            { "label.FollowGameClock", "Follow the in-game clock" },
+            { "label.FollowGameClock", "Sync last 24h with in-game clock" },
             { "desc.FollowGameClock",
                 "Instead of one frozen reading, walk through the city's last 24 hours of real weather " +
                 "using the in-game hour. If it is 15:00 in your city, you get the real weather that the " +
@@ -109,16 +109,16 @@ namespace RealWeatherSync.Localization.Strings
             { "label.CurrentWeatherText", "Current weather" },
 
             // -- Advanced -----------------------------------------------------------
-            { "label.SyncAurora", "Synchronise aurora with NOAA" },
+            { "label.SyncAurora", "Sync aurora with NOAA" },
             { "desc.SyncAurora", "Optional. Use NOAA's current aurora forecast for the weather location. Aurora appears only when the real location and the game are both at night. It keeps its current behaviour while following the game clock; unavailable only with a manual time shift. Forecasts do not guarantee a sighting." },
-            { "label.SyncSunPosition", "Synchronise the real sun position" },
+            { "label.SyncSunPosition", "Sync the real sun position" },
             { "desc.SyncSunPosition", "Optional and off by default. Place the rendered sun where it really is above the weather location right now. Daylight and shadows follow it, while the game clock, date, season and save remain untouched. Follow the in-game clock and Time shift still affect weather only. Requires the game's day/night visuals." },
-            { "label.SyncFog", "Synchronise fog" },
+            { "label.SyncFog", "Sync fog" },
             { "desc.SyncFog",
                 "Derive fog from the reported fog codes and from visibility. Cloud cover never produces fog. " +
                 "Turn this off to leave the game's own fog alone." },
 
-            { "label.SyncTemperature", "Synchronise temperature" },
+            { "label.SyncTemperature", "Sync temperature" },
             { "desc.SyncTemperature",
                 "Drive the visual temperature from the real city. Temperature is the value the largest " +
                 "number of game systems read back - heating demand, upkeep, fire risk, tourism, snow on the " +
@@ -126,7 +126,6 @@ namespace RealWeatherSync.Localization.Strings
                 "to a minimum. The cost is that the game can no longer tell rain from snow, and the " +
                 "temperature you see is the game's own." },
 
-            { "label.SimulationImpactNote", "What the game reads back" },
 
             { "label.ForceSnowAppearance", "Show snow when it is really snowing" },
             { "desc.ForceSnowAppearance",
@@ -134,6 +133,10 @@ namespace RealWeatherSync.Localization.Strings
                 "weather is snow but the real temperature is above freezing, lower the visual temperature just " +
                 "below freezing so snow is drawn. The displayed temperature will then differ from the real one. " +
                 "The season and the date are still never changed." },
+
+            { "label.LimitWeatherEvents", "Limit weather events to real storms" },
+            { "desc.LimitWeatherEvents",
+                "Off by default. While real weather is driving your city, hold the game's weather event generator back - tornadoes, hail storms, lightning strikes - unless the real city is genuinely under a thunderstorm. The game picks those events from temperature, rain and cloudiness alone, so without this a calm real day can still produce a tornado. It pauses the generator rather than creating anything, so nothing is written to your save and turning it off hands the generator straight back. While it is on, the events the game would have produced on its own are held back too - nothing can tell them apart." },
 
             { "label.IgnoreModConflicts", "Ignore mod conflicts" },
             { "desc.IgnoreModConflicts",
@@ -182,16 +185,6 @@ namespace RealWeatherSync.Localization.Strings
                 "Only the city name you type and the coordinates resolved from it are sent to Open-Meteo.\n" +
                 "Optional aurora sync downloads NOAA's global forecast without sending your location." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync writes the same four climate values the game's own developer weather " +
-                "tools write, and parts of the game read those values back. Heating and cooling demand, " +
-                "building upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and " +
-                "weather events all respond to temperature and precipitation - exactly as they respond to " +
-                "the game's own weather.\n" +
-                "The mod changes no gameplay rules and writes nothing into your save.\n" +
-                "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
-                "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog " +
-                "affects nothing outside the visuals." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Disabled" },

@@ -5,6 +5,7 @@ using Colossal.IO.AssetDatabase;
 using Colossal.Json;
 using Game.Modding;
 using Game.Settings;
+using Game.UI.Localization;
 using Game.UI.Widgets;
 using RealWeatherSync.Diagnostics;
 using RealWeatherSync.Localization;
@@ -35,6 +36,13 @@ namespace RealWeatherSync.Settings
         public const string SillyGroup = "SillyGroup";
         public const string AboutGroup = "AboutGroup";
 
+        /// <summary>
+        /// Buttons sharing a group name are laid out on one row. Without the attribute the game
+        /// gives each button a row of its own, which is what left the four actions in a column.
+        /// </summary>
+        private const string ApplyButtonRow = "ApplyButtonRow";
+        private const string ResetButtonRow = "ResetButtonRow";
+
         public const int MinTransitionSeconds = 0;
         public const int MaxTransitionSeconds = 600;
         public const int DefaultTransitionSeconds = 120;
@@ -53,6 +61,7 @@ namespace RealWeatherSync.Settings
         private bool _syncSunPosition;
         private bool _forceSnowAppearance = true;
         private bool _ignoreModConflicts;
+        private bool _limitWeatherEvents;
         private bool _oppositeDay;
         private int _timeShiftHours;
         private bool _followGameClock;
@@ -339,6 +348,7 @@ namespace RealWeatherSync.Settings
 
         [SettingsUISection(MainSection, ActionsGroup)]
         [SettingsUIButton]
+        [SettingsUIButtonGroup(ApplyButtonRow)]
         public bool ApplyCity
         {
             set { Mod.OnApplyCityPressed(); }
@@ -346,6 +356,7 @@ namespace RealWeatherSync.Settings
 
         [SettingsUISection(MainSection, ActionsGroup)]
         [SettingsUIButton]
+        [SettingsUIButtonGroup(ApplyButtonRow)]
         [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsRefreshUnavailable))]
         public bool RefreshWeatherNow
         {
@@ -355,6 +366,7 @@ namespace RealWeatherSync.Settings
         /// <summary>Refreshes and skips straight to the new values, ignoring the transition.</summary>
         [SettingsUISection(MainSection, ActionsGroup)]
         [SettingsUIButton]
+        [SettingsUIButtonGroup(ResetButtonRow)]
         [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsRefreshUnavailable))]
         public bool ApplyImmediately
         {
@@ -363,6 +375,7 @@ namespace RealWeatherSync.Settings
 
         [SettingsUISection(MainSection, ActionsGroup)]
         [SettingsUIButton]
+        [SettingsUIButtonGroup(ResetButtonRow)]
         [SettingsUIConfirmation]
         public bool ResetToGameWeather
         {
@@ -379,29 +392,6 @@ namespace RealWeatherSync.Settings
         {
             return !_syncTemperature;
         }
-
-        /// <summary>
-        /// Honest, in-mod disclosure of what the game reads back from the values this mod writes.
-        /// It belongs here as well as in the store listing: plenty of players read the options
-        /// page and never read the listing.
-        /// </summary>
-        [SettingsUISection(MainSection, AdvancedGroup)]
-        [SettingsUIMultilineText]
-        [Exclude]
-        public string SimulationImpactNote
-        {
-            get { return Translation.Get(LocaleKeys.SimulationImpactNote, DefaultSimulationImpactNote); }
-        }
-
-        private const string DefaultSimulationImpactNote =
-            "Real Weather Sync writes the same four climate values the game's own developer weather tools " +
-            "write, and parts of the game read those values back. Heating and cooling demand, building " +
-            "upkeep, fire risk, leisure, tourism, snow on the ground, surface wetness and weather events " +
-            "all respond to temperature and precipitation - exactly as they respond to the game's own weather.\n" +
-            "The mod changes no gameplay rules and writes nothing into your save.\n" +
-            "Turning off \"Synchronise temperature\" removes the largest part of this, at the cost of " +
-            "rain-versus-snow accuracy. Solar output and groundwater are never affected, and fog affects " +
-            "nothing outside the visuals.";
 
         // ------------------------------------------------------------------
         // Status (read-only display)
@@ -428,19 +418,42 @@ namespace RealWeatherSync.Settings
             get { return StatusReport.DescribeLastUpdate(); }
         }
 
+        /// <summary>
+        /// The live weather description.
+        ///
+        /// <c>Game.UI.Widgets.MultilineText</c> is a <c>NamedWidget</c> with an icon: it carries a
+        /// display name and no value, so a multiline property's own string never reaches the UI.
+        /// Until 1.5.0 this row therefore showed the words "Current weather" and nothing else. The
+        /// text has to arrive through the display-name action instead, which the widget re-reads,
+        /// and which is also what makes it update as the weather does.
+        /// </summary>
         [SettingsUISection(MainSection, StatusGroup)]
         [SettingsUIMultilineText]
+        [SettingsUIDisplayName(typeof(RealWeatherSettings), nameof(GetCurrentWeatherDisplay))]
         [Exclude]
         public string CurrentWeatherText
         {
             get { return StatusReport.DescribeWeather(); }
         }
 
+        public static LocalizedString GetCurrentWeatherDisplay()
+        {
+            return LocalizedString.Value(StatusReport.DescribeWeather());
+        }
+
         // ------------------------------------------------------------------
         // Advanced
+        //
+        // [SettingsUIAdvanced] is the game's own mechanism, not ours: OptionsUISystem drops these
+        // properties from the page entirely while the player's "Show Advanced" toggle is off, and
+        // the options screen only offers that toggle on a page that declares at least one such
+        // property. The label comes from the game's strings, so it needs no entry in the twelve
+        // locale tables. The toggle's state lives in OptionsUISystem for the session; it is not
+        // persisted, so every launch starts with these hidden.
         // ------------------------------------------------------------------
 
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         public bool SyncFog
         {
             get { return _syncFog; }
@@ -461,6 +474,7 @@ namespace RealWeatherSync.Settings
         /// own opt-out for players who want to keep the mod's influence to a minimum.
         /// </summary>
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         public bool SyncTemperature
         {
             get { return _syncTemperature; }
@@ -478,6 +492,7 @@ namespace RealWeatherSync.Settings
 
         /// <summary>Opt-in NOAA OVATION aurora forecast. Off for existing installations.</summary>
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         public bool SyncAurora
         {
             get { return _syncAurora; }
@@ -489,6 +504,7 @@ namespace RealWeatherSync.Settings
         /// UTC time; it never assigns PlanetarySystem time, date, latitude or longitude.
         /// </summary>
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         public bool SyncSunPosition
         {
             get { return _syncSunPosition; }
@@ -496,6 +512,7 @@ namespace RealWeatherSync.Settings
         }
 
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsSnowForcingUnavailable))]
         public bool ForceSnowAppearance
         {
@@ -512,7 +529,24 @@ namespace RealWeatherSync.Settings
             }
         }
 
+        /// <summary>
+        /// Withholds the game's weather event generator unless the real city is actually having a
+        /// thunderstorm.
+        ///
+        /// Off by default because it changes what the game does rather than how it looks, which
+        /// is a different promise from the rest of the mod. What it does NOT do is create events:
+        /// see <see cref="Systems.WeatherHazardGate"/> for why that line is not crossed.
+        /// </summary>
         [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
+        public bool LimitWeatherEvents
+        {
+            get { return _limitWeatherEvents; }
+            set { _limitWeatherEvents = value; }
+        }
+
+        [SettingsUISection(MainSection, AdvancedGroup)]
+        [SettingsUIAdvanced]
         public bool IgnoreModConflicts
         {
             get { return _ignoreModConflicts; }
@@ -537,6 +571,7 @@ namespace RealWeatherSync.Settings
         /// moves - the game clock, date and season are untouched, as always.
         /// </summary>
         [SettingsUISection(MainSection, SillyGroup)]
+        [SettingsUIAdvanced]
         [SettingsUISlider(min = -OpenMeteoClient.MaxTimeShiftHours, max = OpenMeteoClient.MaxTimeShiftHours, step = 1, unit = "integer", scalarMultiplier = 1)]
         [SettingsUIDisableByCondition(typeof(RealWeatherSettings), nameof(IsTimeShiftUnavailable))]
         public int TimeShiftHours
@@ -559,6 +594,7 @@ namespace RealWeatherSync.Settings
         /// middle of an ocean, which is exactly the point.
         /// </summary>
         [SettingsUISection(MainSection, SillyGroup)]
+        [SettingsUIAdvanced]
         public bool AntipodeMode
         {
             get { return _antipodeMode; }
@@ -580,6 +616,7 @@ namespace RealWeatherSync.Settings
         /// applied is kept like any other city.
         /// </summary>
         [SettingsUISection(MainSection, SillyGroup)]
+        [SettingsUIAdvanced]
         [Exclude]
         public ExtremeLocationOption ExtremeLocation
         {
@@ -597,6 +634,7 @@ namespace RealWeatherSync.Settings
         }
 
         [SettingsUISection(MainSection, SillyGroup)]
+        [SettingsUIAdvanced]
         public bool OppositeDay
         {
             get { return _oppositeDay; }
@@ -616,8 +654,13 @@ namespace RealWeatherSync.Settings
         // About
         // ------------------------------------------------------------------
 
+        /// <summary>
+        /// Shown through a display-name action for the same reason as
+        /// <see cref="CurrentWeatherText"/>: the multiline widget draws its name, never a value.
+        /// </summary>
         [SettingsUISection(MainSection, AboutGroup)]
         [SettingsUIMultilineText]
+        [SettingsUIDisplayName(typeof(RealWeatherSettings), nameof(GetAboutDisplay))]
         [Exclude]
         public string AboutText
         {
@@ -630,6 +673,12 @@ namespace RealWeatherSync.Settings
                     "Only the city name and the coordinates resolved from it are sent to Open-Meteo." +
                     Environment.NewLine + "Optional aurora sync downloads NOAA's global forecast without sending your location.");
             }
+        }
+
+        public static LocalizedString GetAboutDisplay()
+        {
+            var settings = Mod.Settings;
+            return LocalizedString.Value(settings != null ? settings.AboutText : string.Empty);
         }
 
         // ------------------------------------------------------------------
@@ -734,6 +783,7 @@ namespace RealWeatherSync.Settings
             _syncSunPosition = false;
             _forceSnowAppearance = true;
             _ignoreModConflicts = false;
+            _limitWeatherEvents = false;
             _oppositeDay = false;
             _timeShiftHours = 0;
             _followGameClock = false;

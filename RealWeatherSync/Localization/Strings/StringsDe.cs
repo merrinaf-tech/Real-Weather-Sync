@@ -20,14 +20,14 @@
             { "group.AboutGroup", "Über" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Echtes Wetter aktivieren" },
+            { "label.EnableRealWeather", "Real Weather Sync aktivieren" },
             { "desc.EnableRealWeather",
                 "Passt das sichtbare Wetter deiner Stadt an das aktuelle echte Wetter der unten " +
                 "gewählten Stadt an. Uhrzeit, Datum und Jahreszeit werden nie verändert - das Spiel " +
                 "liest die Wetterwerte jedoch zurück, siehe \"Was das Spiel zurückliest\" unter " +
                 "Erweitert. Beim Ausschalten übernimmt sofort wieder das Spiel." },
 
-            { "label.FollowGameClock", "Der Spielzeit folgen" },
+            { "label.FollowGameClock", "Letzte 24 h mit der Spielzeit synchronisieren" },
             { "desc.FollowGameClock",
                 "Statt eines einzelnen festen Messwerts durchläuft das Wetter die letzten 24 Stunden " +
                 "der gewählten Stadt, gesteuert von der Spieluhr. Ist es in deiner Stadt 15:00 Uhr, " +
@@ -127,7 +127,6 @@
                 "Das Spiel kann Regen nicht mehr von Schnee unterscheiden, und die angezeigte " +
                 "Temperatur ist die des Spiels." },
 
-            { "label.SimulationImpactNote", "Was das Spiel zurückliest" },
 
             { "label.ForceSnowAppearance", "Schnee zeigen, wenn es wirklich schneit" },
             { "desc.ForceSnowAppearance",
@@ -136,6 +135,10 @@
                 "Gefrierpunkt liegt, wird die sichtbare Temperatur knapp unter null gesetzt, damit " +
                 "Schnee dargestellt wird. Die angezeigte Temperatur weicht dann von der echten ab. " +
                 "Jahreszeit und Datum bleiben weiterhin unangetastet." },
+
+            { "label.LimitWeatherEvents", "Wetterereignisse auf echte Gewitter beschränken" },
+            { "desc.LimitWeatherEvents",
+                "Standardmäßig aus. Solange das echte Wetter deine Stadt steuert, wird der Wetterereignis-Generator des Spiels - Tornados, Hagelstürme, Blitzeinschläge - zurückgehalten, außer die echte Stadt hat tatsächlich ein Gewitter. Das Spiel wählt diese Ereignisse allein anhand von Temperatur, Regen und Bewölkung aus, deshalb kann ohne diese Option auch ein ruhiger echter Tag einen Tornado erzeugen. Der Generator wird nur pausiert, nichts wird erzeugt: In deinen Spielstand wird nichts geschrieben, und beim Ausschalten bekommt das Spiel ihn sofort zurück. Solange die Option aktiv ist, werden auch die Ereignisse zurückgehalten, die das Spiel von sich aus erzeugt hätte - sie lassen sich nicht unterscheiden." },
 
             { "label.IgnoreModConflicts", "Mod-Konflikte ignorieren" },
             { "desc.IgnoreModConflicts",
@@ -189,16 +192,6 @@
                 "An Open-Meteo werden ausschließlich der eingegebene Stadtname und die daraus ermittelten Koordinaten gesendet.\n" +
                 "Die optionale Polarlicht-Synchronisierung lädt die globale NOAA-Vorhersage herunter, ohne deinen Standort zu senden." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync schreibt dieselben vier Klimawerte, die auch die spieleigenen " +
-                "Entwickler-Wetterwerkzeuge schreiben, und Teile des Spiels lesen diese Werte zurück. " +
-                "Heiz- und Kühlbedarf, Gebäudeunterhalt, Brandrisiko, Freizeit, Tourismus, Schnee auf " +
-                "dem Boden, Nässe der Oberflächen und Wetterereignisse reagieren alle auf Temperatur " +
-                "und Niederschlag - genau so, wie sie auf das spieleigene Wetter reagieren.\n" +
-                "Die Mod ändert keine Spielregeln und schreibt nichts in deinen Spielstand.\n" +
-                "\"Temperatur synchronisieren\" auszuschalten entfernt den größten Teil davon, auf " +
-                "Kosten der Genauigkeit bei Regen und Schnee. Solarertrag und Grundwasser sind nie " +
-                "betroffen, und Nebel wirkt sich außerhalb der Darstellung auf nichts aus." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Deaktiviert" },

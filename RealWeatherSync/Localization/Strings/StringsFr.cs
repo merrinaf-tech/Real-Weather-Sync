@@ -20,14 +20,14 @@
             { "group.AboutGroup", "À propos" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Activer la météo réelle" },
+            { "label.EnableRealWeather", "Activer Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Aligne la météo visible de votre ville sur la météo réelle actuelle de la ville " +
                 "choisie ci-dessous. L'horloge, la date et la saison ne sont jamais modifiées, mais " +
                 "le jeu relit bien les valeurs météo : voir « Ce que le jeu relit » dans Avancé. " +
                 "Désactiver cette option rend immédiatement la main au jeu." },
 
-            { "label.FollowGameClock", "Suivre l'horloge du jeu" },
+            { "label.FollowGameClock", "Synchroniser les dernières 24 h avec l'horloge du jeu" },
             { "desc.FollowGameClock",
                 "Au lieu d'un relevé figé, parcourt les 24 dernières heures de météo réelle de la " +
                 "ville choisie en suivant l'heure du jeu. S'il est 15h00 dans votre ville, vous " +
@@ -125,7 +125,6 @@
                 "le plus efficace de réduire au minimum l'influence du mod. En contrepartie, le jeu " +
                 "ne distingue plus la pluie de la neige, et la température affichée est celle du jeu." },
 
-            { "label.SimulationImpactNote", "Ce que le jeu relit" },
 
             { "label.ForceSnowAppearance", "Afficher la neige quand il neige vraiment" },
             { "desc.ForceSnowAppearance",
@@ -134,6 +133,10 @@
                 "au-dessus de zéro, la température visible est abaissée juste sous zéro pour que la " +
                 "neige s'affiche. La température affichée diffère alors de la température réelle. " +
                 "La saison et la date, elles, ne sont toujours jamais modifiées." },
+
+            { "label.LimitWeatherEvents", "Limiter les phénomènes météo aux orages réels" },
+            { "desc.LimitWeatherEvents",
+                "Désactivé par défaut. Tant que la météo réelle pilote votre ville, le générateur de phénomènes météo du jeu - tornades, tempêtes de grêle, impacts de foudre - est retenu, sauf si la ville réelle subit vraiment un orage. Le jeu choisit ces phénomènes uniquement à partir de la température, de la pluie et de la nébulosité : sans cette option, une journée réelle calme peut donc produire une tornade. Elle met le générateur en pause sans rien créer : rien n'est écrit dans votre sauvegarde, et la désactiver rend immédiatement le générateur au jeu. Tant qu'elle est active, les phénomènes que le jeu aurait produits de lui-même sont retenus aussi - rien ne permet de les distinguer." },
 
             { "label.IgnoreModConflicts", "Ignorer les conflits entre mods" },
             { "desc.IgnoreModConflicts",
@@ -186,17 +189,6 @@
                 "Seuls le nom de ville que vous saisissez et les coordonnées qui en découlent sont envoyés à Open-Meteo.\n" +
                 "La synchronisation facultative des aurores télécharge la prévision mondiale de la NOAA sans envoyer votre position." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync écrit les quatre mêmes valeurs climatiques que les outils météo " +
-                "de développement du jeu, et une partie du jeu relit ces valeurs. Besoins de " +
-                "chauffage et de climatisation, entretien des bâtiments, risque d'incendie, loisirs, " +
-                "tourisme, neige au sol, humidité des surfaces et événements météo réagissent tous à " +
-                "la température et aux précipitations, exactement comme ils réagissent à la météo du " +
-                "jeu.\n" +
-                "Le mod ne change aucune règle de jeu et n'écrit rien dans votre sauvegarde.\n" +
-                "Désactiver « Synchroniser la température » en supprime la plus grande part, au prix " +
-                "de la justesse pluie/neige. La production solaire et les nappes phréatiques ne sont " +
-                "jamais affectées, et le brouillard n'agit que sur le rendu." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Désactivé" },

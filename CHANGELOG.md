@@ -8,10 +8,30 @@ This project follows [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Aurora sync now keeps its current NOAA behaviour while weather follows the in-game clock.
+- Clearer option names: *Enable Real Weather Sync*, *Sync last 24h with in-game clock*, and
+  *Synchronise* shortened to *Sync* throughout the English labels.
+- The city field now shows the name the geocoder resolved, so a search for "meyzie" leaves
+  "Meyzieu" in the box.
+- The four action buttons are laid out two per row.
+
+### Fixed
+
+- The *Current weather* and *About* blocks were blank in game. `Game.UI.Widgets.MultilineText`
+  carries a display name and no value, so a multiline property's own string was never drawn; both
+  now supply their text through a display-name action.
+
+### Removed
+
+- The *What the game reads back* note in the Advanced options. It had never rendered - only its
+  heading did, for the same widget reason as above - and the disclosure it carried remains in the
+  README and in the store listing.
 
 ### Added
 
 - Optional real sun-position sync, without changing the game clock, calendar or save.
+- Optional "Limit weather events to real storms", off by default: while real weather is driving the
+  city, the game's weather-event generator runs only when the real city is under a thunderstorm.
+  It pauses the generator and never creates an event, so nothing is written to the save.
 
 ## [1.5.0] - 2026-09-17
 

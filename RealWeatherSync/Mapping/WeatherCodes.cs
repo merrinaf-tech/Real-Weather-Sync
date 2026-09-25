@@ -119,5 +119,18 @@ namespace RealWeatherSync.Mapping
                 default: return "Unknown";
             }
         }
+
+        /// <summary>
+        /// True for the three WMO codes that report a thunderstorm: 95 on its own, 96 with
+        /// slight hail and 99 with heavy hail.
+        ///
+        /// Deliberately narrow. Heavy rain and violent showers are not thunderstorms, and the
+        /// one caller - <see cref="WeatherEventPolicy"/> - uses this to decide when the game is
+        /// allowed to create damaging weather events. Widening it widens that.
+        /// </summary>
+        public static bool IsThunderstorm(int code)
+        {
+            return code == 95 || code == 96 || code == 99;
+        }
     }
 }

@@ -38,6 +38,7 @@
 	<ItemGroup>
 		<Compile Include="Assert.cs" />
 		<Compile Include="MapperTests.cs" />
+		<Compile Include="WeatherEventPolicyTests.cs" />
 		<Compile Include="TimelineTests.cs" />
 		<Compile Include="OpenMeteoParsingTests.cs" />
 		<Compile Include="AuroraForecastTests.cs" />
@@ -64,6 +65,7 @@
 		<Compile Include="$(ModRoot)\Models\OpenMeteoWeatherResponse.cs" />
 		<Compile Include="$(ModRoot)\Mapping\WeatherMapper.cs" />
 		<Compile Include="$(ModRoot)\Mapping\WeatherCodes.cs" />
+		<Compile Include="$(ModRoot)\Mapping\WeatherEventPolicy.cs" />
 		<Compile Include="$(ModRoot)\Services\ILocationService.cs" />
 		<Compile Include="$(ModRoot)\Services\IWeatherService.cs" />
 		<Compile Include="$(ModRoot)\Services\WeatherProviderException.cs" />

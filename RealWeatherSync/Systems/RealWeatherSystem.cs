@@ -38,6 +38,8 @@ namespace RealWeatherSync.Systems
 
         private ClimateSystem _climateSystem;
         private ClimateOverrideController _controller;
+        private WeatherHazardGate _hazardGate;
+        private bool _hazardGateLookedUp;
         private AuroraForecastService _auroraForecast;
         private LocationResult _auroraSnapshotLocation;
         private bool _auroraSnapshotAntipode;
@@ -79,9 +81,17 @@ namespace RealWeatherSync.Systems
         private double _lastWriteSeconds;
         private bool _loggedOverridesActive;
         private bool _auroraFaultLogged;
+        private bool _hazardGateFaultLogged;
 
         /// <summary>Set by the "Apply immediately" button; makes the next target snap into place.</summary>
         private bool _skipNextTransition;
+
+        /// <summary>
+        /// WMO code of the reading currently on screen. Only the weather event gate reads it:
+        /// everything else works from the mapped climate values, which no longer say whether the
+        /// real city was under a thunderstorm or merely under heavy rain.
+        /// </summary>
+        private int _activeWeatherCode;
 
         /// <summary>
         /// Set while the game is running so <see cref="Mod"/> can release overrides
@@ -116,6 +126,8 @@ namespace RealWeatherSync.Systems
 
             // A load is starting: hand the climate back before the world changes.
             ReleaseOverrides("game preload");
+            _hazardGate = null;
+            _hazardGateLookedUp = false;
             ResetTransition();
             _conflictChecked = false;
         }
@@ -214,7 +226,12 @@ namespace RealWeatherSync.Systems
                 try
                 {
                     // Set the query first: StoreLocation is what writes the file.
-                    settings.CityQuery = resolved.Query;
+                    //
+                    // The box is filled with the name the geocoder resolved, not the letters the
+                    // player typed: after searching "meyzie" the field reads "Meyzieu", which is
+                    // also what a second Search or Apply would then look up. The game's text
+                    // input widget has no placeholder, so the value itself has to carry this.
+                    settings.CityQuery = string.IsNullOrEmpty(resolved.Name) ? resolved.Query : resolved.Name;
                     settings.StoreLocation(resolved);
                 }
                 catch (Exception e)
@@ -256,6 +273,8 @@ namespace RealWeatherSync.Systems
                 }
                 try { _controller.ReleaseAurora(); } catch (Exception) { }
             }
+
+            UpdateWeatherEventGate(settings);
 
             // Clock-following mode produces a continuously interpolated value, so it bypasses
             // the fade machinery entirely rather than fighting it.
@@ -308,6 +327,102 @@ namespace RealWeatherSync.Systems
 
             // An unavailable or stale forecast means no *claimed real* aurora.
             _controller.ApplyAurora(intensity);
+        }
+
+        /// <summary>
+        /// Holds the game's weather event generator off while the real city is calm.
+        ///
+        /// See <see cref="WeatherEventPolicy"/> for why: the generator rolls tornadoes, hail
+        /// storms and lightning strikes from the very values this mod writes, so without this the
+        /// mod can produce a tornado over a city whose real counterpart has never had one.
+        ///
+        /// Failures here are never allowed to disturb the weather itself, so the whole thing is
+        /// wrapped and the gate is released on the way out.
+        /// </summary>
+        private void UpdateWeatherEventGate(RealWeatherSettings settings)
+        {
+            try
+            {
+                // No reading yet leaves _activeWeatherCode at 0, "clear sky", which the policy
+                // reads as calm. That is the intended default: the option withholds permission
+                // until the real weather has earned it, rather than granting it on ignorance.
+                var suppress = WeatherEventPolicy.ShouldSuppressEvents(
+                    settings.LimitWeatherEvents, _controller.IsActive, _activeWeatherCode);
+
+                var gate = ResolveHazardGate();
+                if (gate == null)
+                {
+                    return;
+                }
+
+                if (suppress)
+                {
+                    if (gate.Suppress())
+                    {
+                        Mod.Log.Info("Weather events held off: the real weather is not a thunderstorm.");
+                    }
+                }
+                else if (gate.Release())
+                {
+                    Mod.Log.Info("Weather events handed back to the game.");
+                }
+            }
+            catch (Exception e)
+            {
+                if (!_hazardGateFaultLogged)
+                {
+                    Mod.Log.Error(e, "Could not steer the game's weather event generator; it is left to the game.");
+                    _hazardGateFaultLogged = true;
+                }
+
+                ReleaseWeatherEventGate();
+            }
+        }
+
+        /// <summary>
+        /// Looks the hazard system up once per session. <c>GetExistingSystemManaged</c> rather
+        /// than <c>GetOrCreate</c>: in a world that has no weather hazard system there is nothing
+        /// to gate, and creating one would be the mod inventing game behaviour.
+        /// </summary>
+        private WeatherHazardGate ResolveHazardGate()
+        {
+            if (_hazardGateLookedUp)
+            {
+                return _hazardGate;
+            }
+
+            _hazardGateLookedUp = true;
+
+            var hazardSystem = World.GetExistingSystemManaged<WeatherHazardSystem>();
+            if (hazardSystem == null)
+            {
+                Mod.Log.Info("No WeatherHazardSystem in this world; weather events are left to the game.");
+                return null;
+            }
+
+            _hazardGate = new WeatherHazardGate(hazardSystem);
+            return _hazardGate;
+        }
+
+        /// <summary>Hands the event generator back, if we are the reason it is off.</summary>
+        private void ReleaseWeatherEventGate()
+        {
+            if (_hazardGate == null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (_hazardGate.Release())
+                {
+                    Mod.Log.Info("Weather events handed back to the game.");
+                }
+            }
+            catch (Exception e)
+            {
+                Mod.Log.Error(e, "Failed to hand the weather event generator back to the game.");
+            }
         }
 
         private bool IsGameNight()
@@ -375,6 +490,8 @@ namespace RealWeatherSync.Systems
             _transitionDurationSeconds = _skipNextTransition ? 0.0 : settings.EffectiveTransitionSeconds;
             _skipNextTransition = false;
 
+            _activeWeatherCode = snapshot.WeatherCode;
+
             StatusReport.RecordTarget(target);
             Mod.Log.Info("Mapped target values: " + target +
                          " (from " + snapshot + ", transition " +
@@ -429,6 +546,7 @@ namespace RealWeatherSync.Systems
                 _bracketAfter = after;
                 _bracketBeforeTarget = WeatherMapper.Map(before, options);
                 _bracketAfterTarget = WeatherMapper.Map(after, options);
+                _activeWeatherCode = before.WeatherCode;
 
                 StatusReport.RecordSuccess(before);
                 Mod.Log.Info("Game clock " + gameHour.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) +
@@ -569,6 +687,7 @@ namespace RealWeatherSync.Systems
             _hasApplied = false;
             _hasWritten = false;
             _transitionDurationSeconds = 0.0;
+            _activeWeatherCode = 0;
             InvalidateBracketCache();
         }
 
@@ -579,6 +698,8 @@ namespace RealWeatherSync.Systems
             {
                 return;
             }
+
+            ReleaseWeatherEventGate();
 
             bool released;
             try

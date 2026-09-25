@@ -20,14 +20,14 @@
             { "group.AboutGroup", "O modzie" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Włącz prawdziwą pogodę" },
+            { "label.EnableRealWeather", "Włącz Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Dopasowuje widoczną pogodę w Twoim mieście do aktualnej prawdziwej pogody miasta " +
                 "wybranego poniżej. Zegar, data i pora roku nigdy nie są zmieniane, ale gra " +
                 "rzeczywiście odczytuje wartości pogodowe z powrotem - zobacz „Co gra odczytuje z " +
                 "powrotem” w sekcji Zaawansowane. Wyłączenie natychmiast oddaje pogodę grze." },
 
-            { "label.FollowGameClock", "Podążaj za zegarem gry" },
+            { "label.FollowGameClock", "Synchronizuj ostatnie 24 h z zegarem gry" },
             { "desc.FollowGameClock",
                 "Zamiast jednego zamrożonego odczytu przechodzi przez ostatnie 24 godziny " +
                 "prawdziwej pogody wybranego miasta, kierując się godziną w grze. Jeśli w Twoim " +
@@ -126,7 +126,6 @@
                 "minimum. Ceną jest to, że gra nie odróżnia już deszczu od śniegu, a wyświetlana " +
                 "temperatura jest temperaturą samej gry." },
 
-            { "label.SimulationImpactNote", "Co gra odczytuje z powrotem" },
 
             { "label.ForceSnowAppearance", "Pokazuj śnieg, gdy naprawdę pada śnieg" },
             { "desc.ForceSnowAppearance",
@@ -135,6 +134,10 @@
                 "zera, widoczna temperatura zostaje obniżona tuż poniżej zera, żeby śnieg został " +
                 "narysowany. Wyświetlana temperatura będzie się wtedy różnić od prawdziwej. Pora " +
                 "roku i data nadal nigdy nie są zmieniane." },
+
+            { "label.LimitWeatherEvents", "Ogranicz zjawiska pogodowe do prawdziwych burz" },
+            { "desc.LimitWeatherEvents",
+                "Domyślnie wyłączone. Dopóki prawdziwa pogoda steruje twoim miastem, generator zjawisk pogodowych w grze - tornada, gradobicia, uderzenia pioruna - jest wstrzymany, chyba że w prawdziwym mieście faktycznie trwa burza. Gra wybiera te zjawiska wyłącznie na podstawie temperatury, deszczu i zachmurzenia, więc bez tej opcji nawet spokojny prawdziwy dzień może wywołać tornado. Opcja tylko wstrzymuje generator i niczego nie tworzy: nic nie trafia do zapisu gry, a po wyłączeniu gra natychmiast go odzyskuje. Gdy jest włączona, wstrzymywane są także zjawiska, które gra stworzyłaby sama - nie da się ich odróżnić." },
 
             { "label.IgnoreModConflicts", "Ignoruj konflikty modów" },
             { "desc.IgnoreModConflicts",
@@ -187,17 +190,6 @@
                 "Do Open-Meteo wysyłane są wyłącznie wpisana przez Ciebie nazwa miasta i ustalone na jej podstawie współrzędne.\n" +
                 "Opcjonalna synchronizacja zorzy pobiera globalną prognozę NOAA bez wysyłania Twojej lokalizacji." },
 
-            { "key.About.SimulationImpact",
-                "Real Weather Sync zapisuje te same cztery wartości klimatu, które zapisują " +
-                "deweloperskie narzędzia pogodowe samej gry, a część gry odczytuje te wartości z " +
-                "powrotem. Zapotrzebowanie na ogrzewanie i chłodzenie, utrzymanie budynków, ryzyko " +
-                "pożaru, rozrywka, turystyka, śnieg na ziemi, wilgoć powierzchni oraz zdarzenia " +
-                "pogodowe - wszystko to reaguje na temperaturę i opady dokładnie tak samo, jak " +
-                "reaguje na własną pogodę gry.\n" +
-                "Mod nie zmienia zasad rozgrywki i nie zapisuje niczego w Twoim stanie gry.\n" +
-                "Wyłączenie opcji „Synchronizuj temperaturę” usuwa największą część tego wpływu, " +
-                "kosztem dokładności rozróżniania deszczu i śniegu. Produkcja energii słonecznej i " +
-                "wody gruntowe nigdy nie są dotknięte, a mgła nie wpływa na nic poza obrazem." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Wyłączone" },

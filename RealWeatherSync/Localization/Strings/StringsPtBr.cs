@@ -20,14 +20,14 @@
             { "group.AboutGroup", "Sobre" },
 
             // -- General ------------------------------------------------------------
-            { "label.EnableRealWeather", "Ativar clima real" },
+            { "label.EnableRealWeather", "Ativar Real Weather Sync" },
             { "desc.EnableRealWeather",
                 "Faz o clima visível da sua cidade acompanhar o clima real atual da cidade escolhida " +
                 "abaixo. O relógio, a data e a estação nunca são alterados, mas o jogo realmente lê " +
                 "os valores climáticos de volta: veja \"O que o jogo lê de volta\" em Avançado. " +
                 "Ao desativar, o clima volta imediatamente para o controle do jogo." },
 
-            { "label.FollowGameClock", "Seguir o relógio do jogo" },
+            { "label.FollowGameClock", "Sincronizar as últimas 24 h com o relógio do jogo" },
             { "desc.FollowGameClock",
                 "Em vez de uma única leitura fixa, percorre as últimas 24 horas de clima real da " +
                 "cidade escolhida seguindo a hora do jogo. Se são 15:00 na sua cidade, você recebe o " +
@@ -124,7 +124,6 @@
                 "que o jogo deixa de distinguir chuva de neve, e a temperatura exibida passa a ser " +
                 "a do próprio jogo." },
 
-            { "label.SimulationImpactNote", "O que o jogo lê de volta" },
 
             { "label.ForceSnowAppearance", "Mostrar neve quando estiver realmente nevando" },
             { "desc.ForceSnowAppearance",
@@ -133,6 +132,10 @@
                 "é reduzida para logo abaixo de zero para que a neve seja desenhada. A temperatura " +
                 "exibida passará então a diferir da real. A estação e a data continuam nunca sendo " +
                 "alteradas." },
+
+            { "label.LimitWeatherEvents", "Limitar eventos climáticos a tempestades reais" },
+            { "desc.LimitWeatherEvents",
+                "Desativado por padrão. Enquanto o clima real controla sua cidade, o gerador de eventos climáticos do jogo - tornados, tempestades de granizo, raios - fica retido, a menos que a cidade real esteja realmente sob uma tempestade elétrica. O jogo escolhe esses eventos apenas a partir da temperatura, da chuva e da nebulosidade, então sem esta opção um dia real calmo ainda pode gerar um tornado. Ela apenas pausa o gerador e não cria nada: nada é escrito no seu save e, ao desativá-la, o jogo o recupera na hora. Enquanto está ativa, os eventos que o jogo teria criado sozinho também ficam retidos - não há como distingui-los." },
 
             { "label.IgnoreModConflicts", "Ignorar conflitos entre mods" },
             { "desc.IgnoreModConflicts",
@@ -185,17 +188,6 @@
                 "Só o nome da cidade que você digita e as coordenadas obtidas a partir dele são enviados ao Open-Meteo.\n" +
                 "A sincronização opcional de auroras baixa a previsão global da NOAA sem enviar sua localização." },
 
-            { "key.About.SimulationImpact",
-                "O Real Weather Sync grava os mesmos quatro valores climáticos que as ferramentas de " +
-                "clima de desenvolvimento do próprio jogo gravam, e parte do jogo lê esses valores " +
-                "de volta. Demanda de aquecimento e resfriamento, manutenção de edifícios, risco de " +
-                "incêndio, lazer, turismo, neve no chão, umidade das superfícies e eventos " +
-                "climáticos respondem todos à temperatura e à precipitação - exatamente como " +
-                "respondem ao clima do próprio jogo.\n" +
-                "O mod não muda regras de jogo e não grava nada no seu save.\n" +
-                "Desativar \"Sincronizar temperatura\" remove a maior parte disso, ao custo da " +
-                "precisão entre chuva e neve. Geração solar e água subterrânea nunca são afetadas, " +
-                "e a neblina não influencia nada além do visual." },
 
             // -- Runtime status strings ---------------------------------------------
             { "key.Status.Disabled", "Desativado" },
