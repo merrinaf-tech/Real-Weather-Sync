@@ -31,6 +31,7 @@ namespace RealWeatherSync.Tests
             AuroraForecastTests.Run();
             LocationTests.Run();
             LocalizationTests.Run();
+            VersionTests.Run();
 
             if (offline)
             {
