@@ -28,13 +28,11 @@ The world is burning. Let your cims burn with you.
 
 ## Two ways to run it
 
-**Live** - the default. Your city gets the chosen city's weather *right now*, refreshed every 15, 30 or 60 minutes.
+**Live** - the default. Your city gets the chosen city's weather *right now*.
 
 **Follow the in-game clock** - your city replays that city's **last 24 hours** of real weather, hour by hour, matched to your own clock.
 
-&gt; Say you picked Lyon. It is 10:00 in the real world and 15:00 in your city, so you get the weather Lyon actually had at its most recent 15:00. Your clock rolls on to 16:00, you get its 16:00. A full in-game day replays a full real day.
-
-The weather slides continuously between hours, so nothing ever jumps. And the in-game clock is only *read*, never changed.
+The in-game clock is only *read*, never changed.
 
 ## What you get
 
