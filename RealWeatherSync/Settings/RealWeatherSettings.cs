@@ -330,7 +330,6 @@ namespace RealWeatherSync.Settings
             }
 
             FavouritesRaw = FavouriteCities.Serialise(FavouriteCities.Promote(Favourites, location));
-            _favouritesVersion++;
         }
 
         private static string Describe(LocationResult location)
@@ -721,9 +720,26 @@ namespace RealWeatherSync.Settings
         [SettingsUIHidden]
         public float ResolvedLongitude { get; set; }
 
-        /// <summary>Recent cities, flat-encoded. See <see cref="FavouriteCities"/>.</summary>
+        /// <summary>
+        /// Recent cities, flat-encoded. See <see cref="FavouriteCities"/>.
+        ///
+        /// Every write bumps the dropdown's version, including the one LoadSettings makes. The
+        /// options page is registered before the settings are loaded, so the dropdown first builds
+        /// its list from an empty value; bumping only in RememberCity left it empty until a city
+        /// was applied.
+        /// </summary>
         [SettingsUIHidden]
-        public string FavouritesRaw { get; set; } = string.Empty;
+        public string FavouritesRaw
+        {
+            get { return _favouritesRaw; }
+            set
+            {
+                _favouritesRaw = value ?? string.Empty;
+                _favouritesVersion++;
+            }
+        }
+
+        private string _favouritesRaw = string.Empty;
 
         /// <summary>Refresh interval expressed in seconds.</summary>
         public double UpdateIntervalSeconds

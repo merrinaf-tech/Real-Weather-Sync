@@ -1,4 +1,4 @@
-﻿<Publish>
+<Publish>
 	<!--
 		Assigned by Paradox Mods on the first publish (2026-08-06). This id pins every
 		later `Update` / `NewVersion` run to THIS listing, so a release can never
@@ -151,5 +151,7 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 	<ChangeLog>
 - Recent cities no longer appears blank.
 - The About section shows the right version.
+- Recent cities are listed as soon as the game starts.
+- The real weather shows at once when a city loads.
 	</ChangeLog>
 </Publish>

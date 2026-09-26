@@ -487,7 +487,12 @@ namespace RealWeatherSync.Systems
             _hasTarget = true;
 
             _transitionStartSeconds = NowSeconds;
-            _transitionDurationSeconds = _skipNextTransition ? 0.0 : settings.EffectiveTransitionSeconds;
+            // The first target after a city loads is applied at once. A transition blends one
+            // real reading into the next; blending from whatever weather the save happened to hold
+            // meant two minutes of the save's rain and clouds under a clear real sky.
+            _transitionDurationSeconds = _skipNextTransition || !_hasApplied
+                ? 0.0
+                : settings.EffectiveTransitionSeconds;
             _skipNextTransition = false;
 
             _activeWeatherCode = snapshot.WeatherCode;

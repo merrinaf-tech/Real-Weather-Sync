@@ -9,6 +9,8 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 - The recent-cities dropdown now shows its prompt and saved entries instead of appearing blank.
 - The About section and the weather requests reported 1.5.0; they now report the installed version.
+- Recent cities stayed empty after starting the game until a city was applied: the options page is built before the settings load, and loading did not tell the dropdown to refresh.
+- A freshly loaded city showed the weather stored in the save for the length of the transition (two minutes by default) before the real weather took over. The first reading after loading is now applied at once.
 
 ## [1.6.0] - 2026-09-25
 
