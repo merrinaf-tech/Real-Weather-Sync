@@ -3,7 +3,7 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.6.1] - 2026-09-26
 
 ### Fixed
 

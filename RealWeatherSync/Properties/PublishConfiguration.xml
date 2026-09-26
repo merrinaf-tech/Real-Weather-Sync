@@ -125,7 +125,7 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 	<ExternalLink Type="github" Url="https://github.com/merrinaf-tech/Real-Weather-Sync" />
 	<ExternalLink Type="kofi" Url="https://ko-fi.com/fabiozsche" />
 
-	<ModVersion Value="1.6.0" />
+	<ModVersion Value="1.6.1" />
 
 	<!-- Built and verified against game build 1.6.2f1. -->
 	<GameVersion Value="1.6.*" />
@@ -149,9 +149,8 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 		CHANGELOG.md carry the history, or the next release will fail at upload time.
 	-->
 	<ChangeLog>
-- Recent cities no longer appears blank.
+- Recent cities show up from the start and are no longer blank.
 - The About section shows the right version.
-- Recent cities are listed as soon as the game starts.
 - The real weather shows at once when a city loads.
 	</ChangeLog>
 </Publish>
