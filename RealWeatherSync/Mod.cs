@@ -37,7 +37,7 @@ namespace RealWeatherSync
     {
         public const string Id = "RealWeatherSync";
         public const string Name = "Real Weather Sync";
-        public const string Version = "1.5.0";
+        public const string Version = "1.6.0";
 
         public static readonly ILog Log =
             LogManager.GetLogger(Id).SetShowsErrorsInUI(false);
@@ -329,7 +329,7 @@ namespace RealWeatherSync
 
         /// <summary>
         /// A city was picked from the search results dropdown. The value is the index into
-        /// <see cref="WeatherCoordinator.Candidates"/>; an empty value is the "select..." row.
+        /// <see cref="WeatherCoordinator.Candidates"/>; the "select..." row carries -1.
         /// </summary>
         internal static void OnSearchResultSelected(string value)
         {

@@ -3,6 +3,13 @@
 All notable changes to Real Weather Sync are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- The recent-cities dropdown now shows its prompt and saved entries instead of appearing blank.
+- The About section and the weather requests reported 1.5.0; they now report the installed version.
+
 ## [1.6.0] - 2026-09-25
 
 ### Changed

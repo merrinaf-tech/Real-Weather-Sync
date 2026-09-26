@@ -151,14 +151,7 @@ Open-Meteo receives only the city name you type and its resolved coordinates. Op
 		CHANGELOG.md carry the history, or the next release will fail at upload time.
 	-->
 	<ChangeLog>
-# 1.6.0
-
-- New option: **Limit weather events to real storms**, off by default. While real weather is driving your city, the game's weather events - tornadoes, hail storms, lightning strikes - are held back unless the real city is genuinely having a thunderstorm. It pauses the generator and never creates an event, so nothing is written to your save.
-- The advanced options now sit behind the game's own **Show Advanced** switch, so the page opens short.
-- Clearer names: *Enable Real Weather Sync*, *Sync last 24h with in-game clock*, and *Synchronise* shortened to *Sync*.
-- The city field now shows the name that was resolved: searching "meyzie" leaves "Meyzieu" in the box.
-- The four action buttons are laid out two per row.
-- Fixed: the *Current weather* and *About* blocks were blank in game and now show their text.
-- Removed: the *What the game reads back* note. It had never actually rendered - the same information is in this listing and in the README.
+- Recent cities no longer appears blank.
+- The About section shows the right version.
 	</ChangeLog>
 </Publish>

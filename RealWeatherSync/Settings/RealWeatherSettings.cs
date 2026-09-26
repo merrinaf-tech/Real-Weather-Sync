@@ -47,8 +47,12 @@ namespace RealWeatherSync.Settings
         public const int MaxTransitionSeconds = 600;
         public const int DefaultTransitionSeconds = 120;
 
-        /// <summary>Sentinel used by the dropdowns when nothing is selected.</summary>
-        private const string NoSelection = "";
+        /// <summary>
+        /// Sentinel used by the dropdowns when nothing is selected. It must not be empty: the
+        /// game's dropdown treats an empty string as a missing value and renders a blank field
+        /// instead of the matching item's display name.
+        /// </summary>
+        private const string NoSelection = "-1";
 
         private bool _enableRealWeather = true;
         private string _cityQuery = string.Empty;
