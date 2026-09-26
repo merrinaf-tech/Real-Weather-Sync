@@ -81,8 +81,8 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **Three places still carried the claim retracted in 1.3.0.** The in-game description of
   *Enable Real Weather* called the mod "purely cosmetic"; the store listing's short description
   said the same; and the README's opening line and its "Options nobody asked for" section
-  repeated it. The 1.3.0 retraction covered the README body, the listing's long description,
-  `AGENTS.md` and the `Mod` class documentation, but missed these. All now point at
+  repeated it. The 1.3.0 retraction covered the README body, the listing's long description
+  and the `Mod` class documentation, but missed these. All now point at
   *What the game reads back* instead.
 
   Nothing about the mod's behaviour changed — only text that was still wrong.
@@ -92,7 +92,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 ### Corrected
 
 - **The "does not touch the simulation" claim was false and has been retracted** from the README,
-  the store listing, `AGENTS.md` and the `Mod` class documentation.
+  the store listing and the `Mod` class documentation.
 
   `OverridableProperty.op_Implicit` returns `m_OverrideValue` whenever the override is active, so
   every consumer reading through the implicit conversion sees the mod's value rather than the
@@ -110,8 +110,7 @@ This project follows [Semantic Versioning](https://semver.org/).
   (groundwater) read the base value, as does `LeisureSystem`'s precipitation input. Fog is read
   by nothing outside rendering.
 
-  No code changed to cause this — the behaviour has been present since 1.0.0. See `AGENTS.md`
-  section 3a for the full verified table.
+  No code changed to cause this — the behaviour has been present since 1.0.0.
 
 ### Added
 
